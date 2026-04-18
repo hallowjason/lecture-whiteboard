@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>講題不是想出來的，是組出來的</title>
+<style>
+/* =============================================
+   RESET
+   ============================================= */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #000; color: #fff; }
+
+/* =============================================
+   DESIGN TOKENS
+   ============================================= */
+:root {
+  --black:  #000000;
+  --white:  #ffffff;
+  --green:  #C6FF00;
+
+  /* Type scale — all clamp() */
+  --t-display:  clamp(2.8rem, 7.5vw, 7.5rem);
+  --t-display2: clamp(2.2rem, 5.5vw, 5.5rem);
+  --t-h2:       clamp(1.6rem, 3.8vw, 3.8rem);
+  --t-h3:       clamp(1.1rem, 2.2vw, 2rem);
+  --t-body:     clamp(0.82rem, 1.4vw, 1.1rem);
+  --t-label:    clamp(0.55rem, 0.9vw, 0.78rem);
+  --t-small:    clamp(0.5rem,  0.75vw, 0.68rem);
+
+  /* Spacing */
+  --pad:    clamp(1.5rem, 5vw, 5rem);
+  --pad-sm: clamp(1rem, 3vw, 3rem);
+  --gap:    clamp(0.5rem, 1.5vw, 1.5rem);
+
+  /* Font */
+  --font: 'PingFang TC', 'Microsoft JhengHei', 'Heiti TC', 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+}
+
+/* =============================================
+   SLIDE ENGINE
+   ============================================= */
+body { font-family: var(--font); }
+
+#deck {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.slide.active {
+  visibility: visible;
+  pointer-events: all;
+}
+
+/* =============================================
+   CONTENT ENTRANCE ANIMATIONS
+   ============================================= */
+[data-a] {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+[data-a="in"]    { transform: none; }
+[data-a="right"] { transform: translateX(-20px); }
+
+.slide.in [data-a]             { opacity: 1; transform: none; }
+
+/* Stagger delays */
+[data-d="1"] { transition-delay: 0.04s; }
+[data-d="2"] { transition-delay: 0.13s; }
+[data-d="3"] { transition-delay: 0.22s; }
+[data-d="4"] { transition-delay: 0.31s; }
+[data-d="5"] { transition-delay: 0.40s; }
+[data-d="6"] { transition-delay: 0.49s; }
+[data-d="7"] { transition-delay: 0.58s; }
+
+/* =============================================
+   SHARED COMPONENTS
+   ============================================= */
+
+/* Green label block */
+.lbl {
+  display: inline-flex;
+  align-items: center;
+  background: var(--green);
+  color: #000;
+  padding: 0.18em 0.65em;
+  font-size: var(--t-label);
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  line-height: 1.9;
+  white-space: nowrap;
+}
+
+/* White outline label */
+.lbl-outline {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(255,255,255,0.35);
+  color: rgba(255,255,255,0.55);
+  padding: 0.18em 0.65em;
+  font-size: var(--t-label);
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  line-height: 1.9;
+  white-space: nowrap;
+}
+
+/* Page chrome — bottom strip on every slide */
+.chrome {
+  position: absolute;
+  bottom: clamp(0.9rem, 2.5vh, 1.8rem);
+  left: var(--pad);
+  right: var(--pad);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.chrome-l,
+.chrome-r {
+  font-size: var(--t-small);
+  font-weight: 900;
+  color: var(--green);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Thin white divider line */
+.rule {
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+  width: 100%;
+}
+
+/* =============================================
+   SLIDE 1 — COVER
+   ============================================= */
+#s1 {
+  padding: var(--pad);
+  justify-content: center;
+}
+
+#s1 .deco-line {
+  position: absolute;
+  top: 0; bottom: 0;
+  right: clamp(4rem, 12vw, 10rem);
+  width: 1px;
+  background: rgba(255,255,255,0.07);
+}
+
+#s1 .cover-title {
+  font-size: var(--t-display);
+  font-weight: 900;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  margin-top: clamp(1rem, 2.5vh, 2rem);
+}
+
+#s1 .cover-meta {
+  position: absolute;
+  bottom: clamp(3.5rem, 8vh, 6rem);
+  right: var(--pad);
+  text-align: right;
+  font-size: var(--t-small);
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.1em;
+  line-height: 2;
+}
+
+/* =============================================
+   SLIDE 2 — PAIN POINT
+   ============================================= */
+#s2 {
+  padding: var(--pad);
+  padding-left: calc(var(--pad) + clamp(0.6rem, 1vw, 1rem));
+  justify-content: center;
+}
+
+#s2 .pain-bar {
+  position: absolute;
+  left: 0;
+  top: 18%;
+  bottom: 18%;
+  width: clamp(4px, 0.4vw, 6px);
+  background: var(--green);
+}
+
+#s2 .pain-title {
+  font-size: var(--t-display);
+  font-weight: 900;
+  line-height: 1.02;
+  letter-spacing: -0.028em;
+}
+
+#s2 .pain-body {
+  margin-top: clamp(1.2rem, 2.5vh, 2rem);
+  font-size: var(--t-h3);
+  color: rgba(255,255,255,0.45);
+  font-weight: 300;
+  line-height: 1.55;
+  max-width: 28ch;
+}
+
+/* =============================================
+   SLIDE 3 — SOLUTION CONCEPT
+   ============================================= */
+#s3 {
+  padding: var(--pad);
+  justify-content: center;
+  overflow: hidden;
+}
+
+#s3 .bg-word {
+  position: absolute;
+  right: -0.05em;
+  bottom: -0.08em;
+  font-size: clamp(9rem, 26vw, 24rem);
+  font-weight: 900;
+  color: var(--green);
+  opacity: 0.07;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  user-select: none;
+  pointer-events: none;
+}
+
+#s3 .concept-title {
+  font-size: var(--t-display);
+  font-weight: 900;
+  line-height: 1.02;
+  letter-spacing: -0.028em;
+  position: relative;
+  z-index: 2;
+}
+
+#s3 .concept-eq {
+  margin-top: clamp(1.5rem, 3vh, 2.5rem);
+  font-size: var(--t-h3);
+  color: var(--green);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  position: relative;
+  z-index: 2;
+}
+
+#s3 .concept-sub {
+  margin-top: 0.5rem;
+  font-size: var(--t-body);
+  color: rgba(255,255,255,0.4);
+  position: relative;
+  z-index: 2;
+  max-width: 40ch;
+  line-height: 1.6;
+}
+
+/* =============================================
+   SLIDE 4 — CARD OVERVIEW
+   ============================================= */
+#s4 {
+  padding: var(--pad);
+  padding-bottom: calc(var(--pad) + 2.5rem);
+  justify-content: center;
+}
+
+#s4 .overview-title {
+  font-size: var(--t-h2);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: clamp(1.2rem, 2.5vh, 2.2rem);
+}
+
+#s4 .two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(1.2rem, 3vw, 3rem);
+  width: 100%;
+  max-width: 900px;
+}
+
+#s4 .col-head {
+  margin-bottom: clamp(0.5rem, 1vh, 0.9rem);
+}
+
+#s4 .card-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+#s4 .card-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7em;
+  padding: clamp(0.35rem, 0.7vh, 0.65rem) 0;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  font-size: var(--t-body);
+}
+
+#s4 .card-list li .en {
+  font-size: var(--t-small);
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  min-width: 5.5em;
+  flex-shrink: 0;
+}
+
+#s4 .card-list.core li .zh { color: #fff; font-weight: 700; }
+#s4 .card-list.adv  li .zh { color: rgba(255,255,255,0.45); font-weight: 400; }
+
+/* =============================================
+   SLIDES 5-7 — CARD DEMOS (shared)
+   ============================================= */
+.demo-slide {
+  padding: var(--pad);
+  padding-top: clamp(1.2rem, 3.5vh, 3rem);
+  padding-bottom: calc(var(--pad) + 2.5rem);
+  justify-content: flex-start;
+}
+
+.demo-lbl { margin-bottom: clamp(0.6rem, 1.4vh, 1.2rem); }
+
+.demo-title {
+  font-size: var(--t-display2);
+  font-weight: 900;
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  margin-bottom: clamp(0.8rem, 1.6vh, 1.4rem);
+}
+
+/* Card preview box */
+.card-box {
+  border: 1px solid rgba(255,255,255,0.28);
+  padding: clamp(0.9rem, 2vw, 1.6rem);
+  max-width: min(90%, 520px);
+  position: relative;
+}
+
+.card-box::before {
+  content: attr(data-tag);
+  position: absolute;
+  top: -1px; left: -1px;
+  background: var(--green);
+  color: #000;
+  font-size: var(--t-small);
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  padding: 0.18em 0.6em;
+  line-height: 1.9;
+}
+
+.card-box .inner {
+  margin-top: 1.4em;
+  font-size: var(--t-body);
+  color: rgba(255,255,255,0.7);
+  line-height: 1.65;
+}
+
+.card-box .inner em {
+  display: block;
+  margin-top: 0.7em;
+  font-size: 0.88em;
+  color: rgba(255,255,255,0.3);
+  font-style: normal;
+}
+
+/* White variant (Slide 6) */
+.card-box.white {
+  background: #fff;
+  border-color: transparent;
+}
+.card-box.white::before { background: #000; color: var(--green); }
+.card-box.white .inner  { color: rgba(0,0,0,0.72); }
+.card-box.white .inner em { color: rgba(0,0,0,0.3); }
+
+/* Interact pills (Slide 7) */
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(0.3rem, 0.8vw, 0.7rem);
+  margin-bottom: clamp(0.6rem, 1.2vh, 1rem);
+}
+
+/* Slide 7 tighter card box */
+#s7 .card-box { padding: clamp(0.5rem, 1.2vw, 1rem); }
+#s7 .card-box .inner { margin-top: 0.9em; font-size: var(--t-small); }
+
+.pill {
+  border: 1px solid rgba(255,255,255,0.22);
+  padding: 0.45em 1.1em;
+  font-size: var(--t-body);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.pill.green { background: var(--green); color: #000; border-color: transparent; }
+
+/* =============================================
+   SLIDE 8 — QUOTE + Q&A SPLIT
+   ============================================= */
+#s8 {
+  padding: var(--pad);
+  padding-bottom: calc(var(--pad) + 2.5rem);
+  justify-content: center;
+}
+
+#s8 .split {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  gap: clamp(1.5rem, 3.5vw, 3.5rem);
+  align-items: start;
+  width: 100%;
+}
+
+#s8 .vline {
+  background: rgba(255,255,255,0.12);
+  height: clamp(10rem, 25vh, 20rem);
+  align-self: center;
+}
+
+#s8 .split-lbl { margin-bottom: clamp(0.7rem, 1.5vh, 1.2rem); }
+
+#s8 .split-title {
+  font-size: var(--t-h2);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: clamp(0.6rem, 1.2vh, 1rem);
+}
+
+#s8 .split-desc {
+  font-size: var(--t-body);
+  color: rgba(255,255,255,0.5);
+  line-height: 1.65;
+}
+
+#s8 .split-eg {
+  margin-top: clamp(0.7rem, 1.4vh, 1.1rem);
+  border-left: 2px solid var(--green);
+  padding-left: 0.85em;
+  font-size: var(--t-body);
+  color: rgba(255,255,255,0.38);
+  font-style: italic;
+  line-height: 1.55;
+}
+
+/* =============================================
+   SLIDE 9 — ADVANCED CARDS
+   ============================================= */
+#s9 {
+  padding: var(--pad);
+  padding-bottom: calc(var(--pad) + 2.5rem);
+  justify-content: center;
+}
+
+#s9 .adv-title {
+  font-size: var(--t-h2);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: clamp(1.2rem, 2.5vh, 2.2rem);
+}
+
+#s9 .adv-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: clamp(0.5rem, 1.2vw, 1.2rem);
+  width: 100%;
+}
+
+#s9 .adv-card {
+  border: 1px solid rgba(255,255,255,0.13);
+  padding: clamp(0.7rem, 1.5vw, 1.3rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+}
+
+#s9 .adv-card .ae {
+  font-size: var(--t-label);
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+#s9 .adv-card .az {
+  font-size: var(--t-body);
+  color: #fff;
+  font-weight: 700;
+  margin-top: 0.15em;
+}
+
+#s9 .adv-card .ad {
+  font-size: var(--t-small);
+  color: rgba(255,255,255,0.4);
+  line-height: 1.5;
+  margin-top: 0.2em;
+}
+
+/* =============================================
+   SLIDE 10 — BAD VS GOOD
+   ============================================= */
+#s10 {
+  padding: var(--pad);
+  padding-bottom: calc(var(--pad) + 2.5rem);
+  justify-content: center;
+}
+
+#s10 .cmp-title {
+  font-size: var(--t-h2);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: clamp(1.2rem, 2.5vh, 2rem);
+}
+
+#s10 .cmp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(1rem, 2.5vw, 2.5rem);
+  width: 100%;
+}
+
+#s10 .cmp-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-bottom: clamp(0.5rem, 1vh, 0.9rem);
+  font-size: var(--t-label);
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+#s10 .mark {
+  font-size: clamp(0.9rem, 1.8vw, 1.4rem);
+  font-weight: 900;
+  line-height: 1;
+}
+#s10 .mark.bad  { color: rgba(255,70,70,0.9); }
+#s10 .mark.good { color: var(--green); }
+
+#s10 .mini-cards { display: flex; flex-direction: column; gap: clamp(0.28rem, 0.5vh, 0.5rem); }
+
+#s10 .mc {
+  padding: 0.38em 0.75em;
+  font-size: var(--t-small);
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  border: 1px solid;
+}
+#s10 .mc.bad  { border-color: rgba(255,70,70,0.25); color: rgba(255,70,70,0.65); }
+#s10 .mc.good { border-color: rgba(198,255,0,0.28); color: rgba(198,255,0,0.75); }
+
+#s10 .cmp-note {
+  margin-top: clamp(0.5rem, 1vh, 0.9rem);
+  font-size: var(--t-small);
+  color: rgba(255,255,255,0.3);
+  line-height: 1.55;
+}
+
+/* =============================================
+   SLIDES 11, 13 — PRACTICE ROUNDS (shared)
+   ============================================= */
+.prac-slide {
+  padding: var(--pad);
+  padding-bottom: calc(var(--pad) + 2.5rem);
+  justify-content: center;
+  overflow: hidden;
+}
+
+.prac-bg {
+  position: absolute;
+  right: -0.04em;
+  bottom: -0.08em;
+  font-size: clamp(12rem, 38vw, 36rem);
+  font-weight: 900;
+  color: var(--green);
+  opacity: 0.055;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  user-select: none;
+  pointer-events: none;
+}
+
+.prac-tag {
+  font-size: var(--t-label);
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: clamp(0.4rem, 0.8vh, 0.7rem);
+  position: relative; z-index: 2;
+}
+
+.prac-title {
+  font-size: var(--t-display2);
+  font-weight: 900;
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  margin-bottom: clamp(1rem, 2.2vh, 1.8rem);
+  position: relative; z-index: 2;
+}
+
+.prac-desc {
+  font-size: var(--t-h3);
+  color: rgba(255,255,255,0.62);
+  line-height: 1.55;
+  max-width: 46ch;
+  position: relative; z-index: 2;
+}
+
+.prac-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  margin-top: clamp(1rem, 2vh, 1.5rem);
+  background: var(--green);
+  color: #000;
+  padding: 0.5em 1.2em;
+  font-size: var(--t-body);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  position: relative; z-index: 2;
+}
+
+/* =============================================
+   SLIDE 12 — SELF-ASSESSMENT
+   ============================================= */
+#s12 {
+  padding: var(--pad);
+  padding-bottom: calc(var(--pad) + 2.5rem);
+  justify-content: center;
+}
+
+#s12 .qs-title {
+  font-size: var(--t-h2);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: clamp(1.4rem, 3vh, 2.5rem);
+}
+
+#s12 .q-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  max-width: 800px;
+}
+
+#s12 .q-row {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(0.7rem, 1.5vw, 1.3rem);
+  padding: clamp(0.8rem, 1.6vh, 1.3rem) 0;
+  border-bottom: 1px solid rgba(255,255,255,0.09);
+}
+#s12 .q-row:last-child { border-bottom: none; }
+
+#s12 .q-num {
+  font-size: clamp(1.6rem, 4.5vw, 4rem);
+  font-weight: 900;
+  color: var(--green);
+  line-height: 1;
+  flex-shrink: 0;
+  min-width: 1.2em;
+  letter-spacing: -0.03em;
+}
+
+#s12 .q-text {
+  font-size: var(--t-h3);
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.38;
+  padding-top: 0.08em;
+}
+
+/* =============================================
+   SLIDE 14 — CLOSING
+   ============================================= */
+#s14 {
+  justify-content: center;
+  padding: var(--pad);
+  padding-bottom: 0;
+}
+
+#s14 .close-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  font-size: var(--t-display);
+  font-weight: 900;
+  line-height: 0.97;
+  letter-spacing: -0.035em;
+}
+
+#s14 .close-bar {
+  flex-shrink: 0;
+  background: var(--green);
+  padding: clamp(0.9rem, 2.2vh, 1.6rem) var(--pad);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+}
+
+#s14 .cb-main {
+  font-size: var(--t-h3);
+  font-weight: 900;
+  color: #000;
+  letter-spacing: -0.01em;
+}
+
+#s14 .cb-sub {
+  font-size: var(--t-small);
+  font-weight: 900;
+  color: rgba(0,0,0,0.45);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* =============================================
+   RESPONSIVE — SHORT VIEWPORT
+   ============================================= */
+@media (max-height: 700px) {
+  :root {
+    --t-display:  clamp(2rem, 6.5vw, 5rem);
+    --t-display2: clamp(1.8rem, 5vw, 4rem);
+    --t-h2:       clamp(1.3rem, 3.2vw, 2.8rem);
+  }
+}
+
+@media (max-height: 560px) {
+  :root {
+    --t-display:  clamp(1.6rem, 5.5vw, 3.5rem);
+    --t-display2: clamp(1.4rem, 4.5vw, 3rem);
+    --t-h2:       clamp(1.1rem, 2.8vw, 2.2rem);
+  }
+  .prac-bg, #s3 .bg-word { display: none; }
+}
+
+/* =============================================
+   REDUCED MOTION
+   ============================================= */
+@media (prefers-reduced-motion: reduce) {
+  [data-a] { transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div id="deck">
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 01  COVER
+       ══════════════════════════════════════════ -->
+  <section class="slide" id="s1" aria-label="封面">
+    <div class="deco-line" aria-hidden="true"></div>
+
+    <span class="lbl" data-a="right" data-d="1">Card-Based Talk Prep</span>
+
+    <h1 class="cover-title" data-a data-d="2">講題不是想出來的，<br>是組出來的</h1>
+
+    <div class="cover-meta" data-a="in" data-d="4">
+      講題碎片化卡片教學<br>
+      Card-Based Talk Prep
+    </div>
+
+    <div class="chrome">
+      <div class="chrome-l">01 — CARD PREP</div>
+      <div class="chrome-r">01 / 14</div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 02  PAIN POINT
+       ══════════════════════════════════════════ -->
+  <section class="slide" id="s2" aria-label="痛點">
+    <div class="pain-bar" aria-hidden="true"></div>
+
+    <h2 class="pain-title" data-a data-d="2">你上次準備<br>講題，是<br>怎麼開始的？</h2>
+
+    <p class="pain-body" data-a data-d="3">坐在書桌前，盯著空白頁，<br>不知道從哪裡開始。</p>
+
+    <div class="chrome">
+      <div class="chrome-l">02 — CARD PREP</div>
+      <div class="chrome-r">02 / 14</div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 03  SOLUTION CONCEPT
+       ══════════════════════════════════════════ -->
+  <section class="slide" id="s3" aria-label="解法概念">
+    <div class="bg-word" aria-hidden="true">CARDS</div>
+
+    <h2 class="concept-title" data-a data-d="2">把講題<br>拆成<br>最小單位</h2>
+
+    <p class="concept-eq" data-a data-d="3">一張卡片 = 一個功能單位</p>
+    <p class="concept-sub" data-a data-d="4">每張卡片都有明確作用：傳達、感染、引導、引發行動</p>
+
+    <div class="chrome">
+      <div class="chrome-l">03 — CARD PREP</div>
+      <div class="chrome-r">03 / 14</div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 04  CARD OVERVIEW
+       ══════════════════════════════════════════ -->
+  <section class="slide" id="s4" aria-label="卡片體系總覽">
+    <h2 class="overview-title" data-a data-d="1">10 張卡片<br>搞定一場講題</h2>
+
+    <div class="two-col">
+      <div data-a data-d="2">
+        <div class="col-head"><span class="lbl">核心 5 張</span></div>
+        <ul class="card-list core">
+          <li><span class="en">PURPOSE</span><span class="zh">目的卡</span></li>
+          <li><span class="en">STORY</span><span class="zh">故事卡</span></li>
+          <li><span class="en">INTERACT</span><span class="zh">互動卡</span></li>
+          <li><span class="en">QUOTE</span><span class="zh">金句卡</span></li>
+          <li><span class="en">Q&amp;A</span><span class="zh">自問自答卡</span></li>
+        </ul>
+      </div>
+      <div data-a data-d="3">
+        <div class="col-head"><span class="lbl-outline">進階 5 張</span></div>
+        <ul class="card-list adv">
+          <li><span class="en">VIDEO</span><span class="zh">影片卡</span></li>
+          <li><span class="en">NEWS</span><span class="zh">時事卡</span></li>
+          <li><span class="en">PSYCH</span><span class="zh">心理卡</span></li>
+          <li><span class="en">FREE</span><span class="zh">自由卡</span></li>
+          <li><span class="en">RHYTHM</span><span class="zh">節奏卡</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="chrome">
+      <div class="chrome-l">04 — CARD PREP</div>
+      <div class="chrome-r">04 / 14</div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 05  PURPOSE CARD DEMO
+       ══════════════════════════════════════════ -->
+  <section class="slide demo-slide" id="s5" aria-label="目的卡示範">
+    <div class="demo-lbl" data-a="right" data-d="1">
+      <span class="lbl">PURPOSE 目的卡</span>
+    </div>
+
+    <h2 class="demo-title" data-a data-d="2">傳達什麼？<br>聽眾帶走什麼？</h2>
+
+    <div class="card-box" data-tag="PURPOSE" data-a data-d="3">
+      <div class="inner">
+        <strong>這場講題的核心訊息是什麼？</strong><br><br>
+        我希望聽眾離開後，記得一件事：<br>
+        「祈禱不是請求清單，是關係的維持。」<br>
+        <em>✓ 具體、可檢驗、一句話說得清楚</em>
+      </div>
+    </div>
+
+    <div class="chrome">
+      <div class="chrome-l">05 — CARD PREP</div>
+      <div class="chrome-r">05 / 14</div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 06  STORY CARD DEMO
+       ══════════════════════════════════════════ -->
+  <section class="slide demo-slide" id="s6" aria-label="故事卡示範">
+    <div class="demo-lbl" data-a="right" data-d="1">
+      <span class="lbl">STORY 故事卡</span>
+    </div>
+
+    <h2 class="demo-title" data-a data-d="2">具體場景<br>有時間有地點</h2>
+
+    <div class="card-box white" data-tag="STORY" data-a data-d="3">
+      <div class="inner">
+        那是 2018 年齋月第三週，<br>
+        我坐在麥地那清真寺的走廊上，<br>
+        周圍的人都在哭泣，而我…… 什麼也感覺不到。<br>
+        <em>時間 ✓ &nbsp; 地點 ✓ &nbsp; 細節 ✓ &nbsp; 衝突 ✓</em>
+      </div>
+    </div>
+
+    <div class="chrome">
+      <div class="chrome-l">06 — CARD PREP</div>
+      <div class="chrome-r">06 / 14</div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 07  INTERACT CARD DEMO
+       ══════════════════════════════════════════ -->
+  <section class="slide demo-slide" id="s7" aria-label="互動卡示範">
+    <div class="demo-lbl" data-a="right" data-d="1">
+      <span class="lbl">INTERACT 互動卡</span>
+    </div>
+
+    <h2 class="demo-title" data-a data-d="2">給聽眾<br>一個動作</h2>
+
+    <div class="pill-row" data-a data-d="3">
+      <div class="pill green">提問</div>
+      <div class="pill">舉手</div>
+      <div class="pill">小組討論</div>
+      <div class="pill">配對分享</div>
+      <div class="pill">寫下來</div>
+    </div>
+
+    <div class="card-box" data-tag="INTERACT" data-a data-d="4">
+      <div class="inner">
+        「請問座位上有多少人，上個月有認真做過一次禱告？<br>
+        舉個手讓我看看。」<br>
+        <em>讓沉默變成參與的入口</em>
+      </div>
+    </div>
+
+    <div class="chrome">
+      <div class="chrome-l">07 — CARD PREP</div>
+      <div class="chrome-r">07 / 14</div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 08  QUOTE + Q&A SPLIT
+       ══════════════════════════════════════════ -->
+  <section class="slide" id="s8" aria-label="金句卡與自問自答卡">
+    <div class="split">
+      <div data-a data-d="2">
+        <div class="split-lbl"><span class="lbl">QUOTE 金句卡</span></div>
+        <h3 class="split-title">一句話的<br>力量</h3>
+        <p class="split-desc">從聖訓、古蘭經或名言中取一句話，<br>讓聽眾帶著它離開。</p>
+        <div class="split-eg">
+          「人的行為取決於他的意圖。」<br>
+          — 布哈里聖訓集
+        </div>
+      </div>
+
+      <div class="vline" data-a="in" data-d="1"></div>
+
+      <div data-a data-d="3">
+        <div class="split-lbl"><span class="lbl">Q&amp;A 自問自答</span></div>
+        <h3 class="split-title">替聽眾<br>問問題</h3>
+        <p class="split-desc">搶先提出聽眾心中的疑問，<br>再給出你的答案。</p>
+        <div class="split-eg">
+          「有人可能會想：齋戒這麼辛苦，真的有必要嗎？<br>
+          我的答案是……」
+        </div>
+      </div>
+    </div>
+
+    <div class="chrome">
+      <div class="chrome-l">08 — CARD PREP</div>
+      <div class="chrome-r">08 / 14</div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 09  ADVANCED CARDS
+       ══════════════════════════════════════════ -->
+  <section class="slide" id="s9" aria-label="進階卡快覽">
+    <h2 class="adv-title" data-a data-d="1">進階 5 張<br>看一眼就夠</h2>
+
+    <div class="adv-grid">
+      <div class="adv-card" data-a data-d="2">
+        <span class="ae">VIDEO</span>
+        <span class="az">影片卡</span>
+        <span class="ad">短影片作為素材，引發討論</span>
+      </div>
+      <div class="adv-card" data-a data-d="3">
+        <span class="ae">NEWS</span>
+        <span class="az">時事卡</span>
+        <span class="ad">連結當下新聞或社會事件</span>
+      </div>
+      <div class="adv-card" data-a data-d="4">
+        <span class="ae">PSYCH</span>
+        <span class="az">心理卡</span>
+        <span class="ad">認知偏誤或心理學效應</span>
+      </div>
+      <div class="adv-card" data-a data-d="5">
+        <span class="ae">FREE</span>
+        <span class="az">自由卡</span>
+        <span class="ad">任何不屬於其他類型的素材</span>
+      </div>
+      <div class="adv-card" data-a data-d="6">
+        <span class="ae">RHYTHM</span>
+        <span class="az">節奏卡</span>
+        <span class="ad">停頓、過渡、轉換節拍</span>
+      </div>
+    </div>
+
+    <div class="chrome">
+      <div class="chrome-l">09 — CARD PREP</div>
+      <div class="chrome-r">09 / 14</div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 10  BAD VS GOOD
+       ══════════════════════════════════════════ -->
+  <section class="slide" id="s10" aria-label="壞範例對照">
+    <h2 class="cmp-title" data-a data-d="1">這不叫<br>有準備</h2>
+
+    <div class="cmp-grid">
+      <div data-a data-d="2">
+        <div class="cmp-head">
+          <span class="mark bad">✗</span>
+          <span style="color:rgba(255,70,70,0.7)">全是故事卡</span>
+        </div>
+        <div class="mini-cards">
+          <div class="mc bad">STORY — 童年記憶</div>
+          <div class="mc bad">STORY — 老師的故事</div>
+          <div class="mc bad">STORY — 朝聖經歷</div>
+          <div class="mc bad">STORY — 網路文章</div>
+          <div class="mc bad">STORY — 結尾故事</div>
+        </div>
+        <p class="cmp-note">無目的、無互動、無節奏<br>聽眾：「這跟我有什麼關係？」</p>
+      </div>
+
+      <div data-a data-d="3">
+        <div class="cmp-head">
+          <span class="mark good">✓</span>
+          <span style="color:rgba(198,255,0,0.8)">有起伏的組合</span>
+        </div>
+        <div class="mini-cards">
+          <div class="mc good">PURPOSE — 北極星</div>
+          <div class="mc good">STORY — 開場鉤子</div>
+          <div class="mc good">INTERACT — 提問</div>
+          <div class="mc good">QUOTE — 聖訓引用</div>
+          <div class="mc good">RHYTHM — 停頓收尾</div>
+        </div>
+        <p class="cmp-note">有意圖、有節奏、有帶走感<br>聽眾：「我懂了，而且我想試試。」</p>
+      </div>
+    </div>
+
+    <div class="chrome">
+      <div class="chrome-l">10 — CARD PREP</div>
+      <div class="chrome-r">10 / 14</div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 11  PRACTICE ROUND 1
+       ══════════════════════════════════════════ -->
+  <section class="slide prac-slide" id="s11" aria-label="第一輪練習">
+    <div class="prac-bg" aria-hidden="true">01</div>
+
+    <p class="prac-tag" data-a="right" data-d="1">第一輪練習</p>
+    <h2 class="prac-title" data-a data-d="2">小組白板<br>組出講題</h2>
+    <p class="prac-desc" data-a data-d="3">
+      用白板選出 4–6 張卡片，<br>
+      組成一個 5 分鐘的講題架構。<br>
+      不用完美，先把骨架立起來。
+    </p>
+    <a href="whiteboard.html" class="prac-cta" data-a data-d="4">▶ 打開 whiteboard.html</a>
+
+    <div class="chrome">
+      <div class="chrome-l">11 — CARD PREP</div>
+      <div class="chrome-r">11 / 14</div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 12  SELF-ASSESSMENT
+       ══════════════════════════════════════════ -->
+  <section class="slide" id="s12" aria-label="自評三問">
+    <h2 class="qs-title" data-a data-d="1">問自己<br>三個問題</h2>
+
+    <div class="q-list">
+      <div class="q-row" data-a data-d="2">
+        <span class="q-num">1</span>
+        <span class="q-text">目的卡的方向，<br>從整組卡片看得出來嗎？</span>
+      </div>
+      <div class="q-row" data-a data-d="3">
+        <span class="q-num">2</span>
+        <span class="q-text">節奏有起伏？<br>還是平鋪直敘？</span>
+      </div>
+      <div class="q-row" data-a data-d="4">
+        <span class="q-num">3</span>
+        <span class="q-text">聽眾為什麼要聽完？<br>有沒有給他留下的理由？</span>
+      </div>
+    </div>
+
+    <div class="chrome">
+      <div class="chrome-l">12 — CARD PREP</div>
+      <div class="chrome-r">12 / 14</div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 13  PRACTICE ROUND 2
+       ══════════════════════════════════════════ -->
+  <section class="slide prac-slide" id="s13" aria-label="第二輪練習">
+    <div class="prac-bg" aria-hidden="true">02</div>
+
+    <p class="prac-tag" data-a="right" data-d="1">第二輪練習</p>
+    <h2 class="prac-title" data-a data-d="2">升級版<br>加進階卡</h2>
+    <p class="prac-desc" data-a data-d="3">
+      在原有架構加入至少 1 張進階卡，<br>
+      完成後用自評三問逐一檢查，<br>
+      再準備和另一組互評。
+    </p>
+
+    <div class="chrome">
+      <div class="chrome-l">13 — CARD PREP</div>
+      <div class="chrome-r">13 / 14</div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 14  CLOSING
+       ══════════════════════════════════════════ -->
+  <section class="slide" id="s14" aria-label="結尾">
+    <h2 class="close-title" data-a data-d="2">你的講題<br>從今天起<br>是組出來的</h2>
+
+    <div class="close-bar" data-a="in" data-d="4">
+      <span class="cb-main">開始組你的第一場</span>
+      <span class="cb-sub">Card-Based Talk Prep</span>
+    </div>
+  </section>
+
+</div><!-- #deck -->
+
+<script>
+/* =============================================
+   PRESENTATION CONTROLLER
+   ============================================= */
+(function () {
+  'use strict';
+
+  const slides      = Array.from(document.querySelectorAll('.slide'));
+  const TOTAL       = slides.length;
+  let   current     = 0;
+  let   busy        = false;
+  const DUR         = 460; // ms — must match CSS transition
+
+  /* ── helpers ─────────────────────────────── */
+  function revealContent(slide) {
+    // Force re-trigger of [data-a] transitions
+    slide.classList.remove('in');
+    // one rAF guarantees a paint cycle before re-adding
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => slide.classList.add('in'));
+    });
+  }
+
+  function setActive(slide) {
+    slide.classList.add('active');
+    revealContent(slide);
+  }
+
+  /* ── initial state ───────────────────────── */
+  setActive(slides[0]);
+
+  /* ── navigation ──────────────────────────── */
+  function go(next, dir /* 1=fwd, -1=bwd */) {
+    if (busy || next === current || next < 0 || next >= TOTAL) return;
+    busy = true;
+
+    const out = slides[current];
+    const inn = slides[next];
+
+    /* Position incoming slide off-screen (no transition yet) */
+    inn.style.transition = 'none';
+    inn.style.transform  = `translateX(${dir * 100}%)`;
+    inn.style.opacity    = '1';
+    inn.classList.add('active');
+
+    /* Force reflow so position takes effect before transition starts */
+    inn.getBoundingClientRect();
+
+    /* Animate both slides */
+    const ease = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    const t    = `transform ${DUR}ms ${ease}, opacity ${DUR}ms ease`;
+
+    inn.style.transition = t;
+    out.style.transition = t;
+    inn.style.transform  = 'translateX(0)';
+    out.style.transform  = `translateX(${dir * -7}%)`;
+    out.style.opacity    = '0';
+
+    setTimeout(() => {
+      /* Clean up outgoing */
+      out.classList.remove('active');
+      out.style.cssText = '';
+
+      /* Clean up incoming */
+      inn.style.transition = '';
+      inn.style.transform  = '';
+      inn.style.opacity    = '';
+
+      current = next;
+      busy    = false;
+      revealContent(inn);
+    }, DUR);
+  }
+
+  /* ── keyboard ────────────────────────────── */
+  document.addEventListener('keydown', (e) => {
+    switch (e.key) {
+      case 'ArrowRight': case 'ArrowDown': case ' ':
+        e.preventDefault(); go(current + 1, 1);  break;
+      case 'ArrowLeft':  case 'ArrowUp':
+        e.preventDefault(); go(current - 1, -1); break;
+      case 'Home': e.preventDefault(); go(0, -1);         break;
+      case 'End':  e.preventDefault(); go(TOTAL - 1, 1);  break;
+    }
+  });
+
+  /* ── touch / swipe ───────────────────────── */
+  let tx = 0, ty = 0;
+  document.addEventListener('touchstart', (e) => {
+    tx = e.touches[0].clientX;
+    ty = e.touches[0].clientY;
+  }, { passive: true });
+
+  document.addEventListener('touchend', (e) => {
+    const dx = tx - e.changedTouches[0].clientX;
+    const dy = ty - e.changedTouches[0].clientY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 48) {
+      dx > 0 ? go(current + 1, 1) : go(current - 1, -1);
+    }
+  }, { passive: true });
+
+  /* ── mouse wheel (debounced) ─────────────── */
+  let wt;
+  document.addEventListener('wheel', (e) => {
+    clearTimeout(wt);
+    wt = setTimeout(() => {
+      e.deltaY > 0 ? go(current + 1, 1) : go(current - 1, -1);
+    }, 60);
+  }, { passive: true });
+
+})();
+</script>
+</body>
+</html>
