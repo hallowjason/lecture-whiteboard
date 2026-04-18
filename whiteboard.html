@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>講題結構板</title>
+<style>
+:root {
+  --black:#000; --white:#fff; --green:#C6FF00;
+  --gray-50:#F8F8F8; --gray-100:#F0F0F0; --gray-200:#E0E0E0;
+  --gray-400:#A0A0A0; --gray-600:#555; --gray-800:#1A1A1A;
+  --red:#FF3333;
+  --font:'PingFang TC','Source Han Sans TC','Noto Sans TC','Microsoft JhengHei',sans-serif;
+  --fs: 14px;
+  --left-w:calc(115px + 7em); --right-w:calc(125px + 7.5em);
+  /* card colors */
+  --c-purpose:#2D6BE4; --c-story:#FF6B35; --c-interactive:#9B5DE5;
+  --c-quote:#00B89C;   --c-qa:#F72585;    --c-video:#E63946;
+  --c-news:#F4A261;    --c-psych:#7B9E87; --c-free:#6D6875;
+  --c-rhythm:#4CC9F0;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{font-size:var(--fs)}
+body{font-family:var(--font);background:var(--gray-100);color:var(--black);height:100vh;overflow:hidden}
+
+/* ── LAYOUT ── */
+.app{display:flex;height:100vh;overflow:hidden;position:relative}
+
+/* ── SIDEBAR SHARED ── */
+.lib,.panel-right{
+  flex-shrink:0;overflow-y:auto;
+  scrollbar-width:thin;transition:width .22s ease,opacity .22s ease;
+}
+.lib{
+  width:var(--left-w);background:var(--black);color:var(--white);
+  scrollbar-color:#333 transparent;
+}
+.lib::-webkit-scrollbar{width:3px}
+.lib::-webkit-scrollbar-thumb{background:#333}
+.panel-right{
+  width:var(--right-w);background:var(--white);border-left:2px solid var(--black);
+  scrollbar-color:var(--gray-200) transparent;
+  display:flex;flex-direction:column;
+}
+.panel-right::-webkit-scrollbar{width:3px}
+.panel-right::-webkit-scrollbar-thumb{background:var(--gray-200)}
+
+/* collapsed sidebars */
+.lib.collapsed,.panel-right.collapsed{
+  width:0!important;opacity:0;overflow:hidden;border:none;
+}
+
+/* toggle buttons */
+.sidebar-toggle{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:18px;height:48px;background:var(--black);color:var(--white);
+  border:none;cursor:pointer;font-size:.7rem;z-index:20;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:0 4px 4px 0;transition:background .15s;
+}
+.sidebar-toggle:hover{background:#333}
+.sidebar-toggle.right-toggle{
+  right:0;border-radius:4px 0 0 4px;background:var(--gray-800);
+}
+.sidebar-toggle.right-toggle:hover{background:#333}
+#leftToggleWrap{position:relative;width:0;flex-shrink:0}
+#rightToggleWrap{position:relative;width:0;flex-shrink:0}
+
+/* ── LEFT SIDEBAR ── */
+.lib-header{padding:16px 14px 12px;border-bottom:1px solid #1C1C1C;flex-shrink:0}
+.lib-eyebrow{font-size:.55rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--gray-400);margin-bottom:4px}
+.lib-title{font-size:1.1rem;font-weight:900;letter-spacing:-.5px;line-height:1.15}
+.lib-hint{margin-top:5px;font-size:.65rem;color:var(--green);font-weight:700}
+.lib-section{padding:10px 14px 3px;font-size:.55rem;letter-spacing:2px;text-transform:uppercase;color:var(--gray-400);font-weight:600}
+.lib-divider{height:1px;background:#1C1C1C;margin:6px 0}
+.lib-btn{
+  position:relative;display:flex;flex-direction:column;width:100%;
+  padding:8px 14px;background:transparent;border:none;border-top:1px solid #111;
+  cursor:pointer;text-align:left;overflow:hidden;
+}
+.lib-btn::after{
+  content:'';position:absolute;inset:0;background:var(--green);
+  transform:translateX(-100%);transition:transform .18s ease;z-index:0;
+}
+.lib-btn:hover::after{transform:translateX(0)}
+.lib-btn>*{position:relative;z-index:1}
+.lib-btn-en{font-size:.5rem;letter-spacing:2px;font-weight:700;color:#444;margin-bottom:1px;text-transform:uppercase;transition:color .18s}
+.lib-btn-zh{font-size:.85rem;font-weight:800;color:var(--white);transition:color .18s}
+.lib-btn-desc{font-size:.62rem;color:#555;margin-top:1px;line-height:1.3;transition:color .18s}
+.lib-btn:hover .lib-btn-en{color:rgba(0,0,0,.45)}
+.lib-btn:hover .lib-btn-zh{color:var(--black)}
+.lib-btn:hover .lib-btn-desc{color:rgba(0,0,0,.6)}
+
+/* ── WORKBOARD ── */
+.board{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.board-header{
+  background:var(--white);border-bottom:2px solid var(--black);
+  padding:10px 16px;display:flex;align-items:center;
+  justify-content:space-between;flex-shrink:0;gap:8px;flex-wrap:wrap;
+}
+.board-header-left{display:flex;align-items:baseline;gap:8px}
+.board-h1{font-size:1.1rem;font-weight:900;letter-spacing:-.5px}
+.board-count{font-size:.72rem;color:var(--gray-400)}
+
+/* font size control */
+.fs-control{display:flex;align-items:center;gap:6px}
+.fs-label{font-size:.6rem;color:var(--gray-400);letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
+.fs-slider{
+  -webkit-appearance:none;appearance:none;
+  width:80px;height:3px;background:var(--gray-200);outline:none;cursor:pointer;
+}
+.fs-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;width:13px;height:13px;
+  background:var(--black);border-radius:50%;cursor:pointer;
+}
+.fs-slider::-moz-range-thumb{width:13px;height:13px;background:var(--black);border-radius:50%;border:none;cursor:pointer}
+.fs-val{font-size:.65rem;font-weight:700;min-width:22px}
+
+.board-body{flex:1;overflow-y:auto;padding:14px 14px 40px;scrollbar-width:thin;scrollbar-color:var(--gray-200) transparent}
+.board-body::-webkit-scrollbar{width:4px}
+.board-body::-webkit-scrollbar-thumb{background:var(--gray-200)}
+
+/* empty state */
+.empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--gray-400);user-select:none}
+.empty-arrow{font-size:2.2rem;margin-bottom:8px;animation:nudge 2.2s ease-in-out infinite}
+@keyframes nudge{0%,100%{transform:translateX(0);opacity:.35}50%{transform:translateX(-10px);opacity:1}}
+.empty p{font-size:.9rem;font-weight:700}
+.empty small{font-size:.72rem;margin-top:4px;color:var(--gray-400)}
+
+/* ── WORK CARD ── */
+.work-card{
+  background:var(--white);border:2px solid var(--black);
+  margin-bottom:10px;border-radius:4px;overflow:hidden;
+  animation:cardIn .22s cubic-bezier(.25,.46,.45,.94) both;
+  box-shadow:2px 3px 0 rgba(0,0,0,.08);
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+.work-card.out{animation:cardOut .18s ease forwards}
+@keyframes cardOut{to{opacity:0;transform:scale(.96)}}
+
+.card-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 10px;cursor:pointer;user-select:none;
+  border-left:5px solid var(--card-color, #000);
+}
+.card-bar-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.card-pos{font-size:.58rem;font-weight:700;letter-spacing:1px;color:var(--gray-400);min-width:16px}
+.card-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  background:var(--card-color,#000);color:var(--white);
+  font-size:.65rem;font-weight:900;letter-spacing:.8px;
+  text-transform:uppercase;padding:2px 7px 3px;border-radius:2px;
+  white-space:nowrap;
+}
+.card-tag-en{font-size:.5rem;font-weight:400;opacity:.7;letter-spacing:1.2px}
+.card-title-preview{
+  font-size:.78rem;font-weight:600;color:var(--gray-600);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  flex:1;min-width:0;margin-left:4px;
+}
+.card-expand-icon{font-size:.7rem;color:var(--gray-400);margin-left:4px;flex-shrink:0;transition:transform .18s}
+.work-card.expanded .card-expand-icon{transform:rotate(180deg)}
+
+.card-ctrls{display:flex;gap:3px;flex-shrink:0}
+.ctrl{
+  width:1.6em;height:1.6em;display:flex;align-items:center;justify-content:center;
+  background:transparent;border:1px solid var(--gray-200);color:var(--gray-400);
+  font-size:.9rem;cursor:pointer;transition:background .12s,color .12s,border-color .12s;padding:0;flex-shrink:0;
+}
+.ctrl:hover:not(:disabled){background:var(--black);color:var(--white);border-color:var(--black)}
+.ctrl.del:hover{background:var(--red);color:var(--white);border-color:var(--red)}
+.ctrl:disabled{opacity:.2;cursor:default}
+
+.card-body{padding:10px 12px 12px;border-top:1px solid var(--gray-100)}
+.field{margin-bottom:8px}
+.field-lbl{font-size:.55rem;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--gray-400);margin-bottom:3px}
+.finput{
+  width:100%;border:1px solid var(--gray-200);padding:6px 8px;
+  font-family:var(--font);font-size:.85rem;font-weight:600;
+  color:var(--black);background:var(--white);outline:none;
+  transition:border-color .12s;border-radius:0;-webkit-appearance:none;
+}
+.finput:focus{border-color:var(--card-color,var(--black))}
+.ftextarea{
+  width:100%;border:1px solid var(--gray-200);padding:6px 8px;
+  font-family:var(--font);font-size:.8rem;color:var(--gray-800);
+  background:var(--white);outline:none;resize:vertical;min-height:4.5em;
+  line-height:1.55;transition:border-color .12s;border-radius:0;-webkit-appearance:none;
+}
+.ftextarea:focus{border-color:var(--card-color,var(--black))}
+.furl{
+  width:100%;border:1px solid var(--gray-200);padding:5px 8px;
+  font-family:'Menlo','Consolas',monospace;font-size:.68rem;
+  color:var(--gray-600);background:var(--gray-50);outline:none;
+  transition:border-color .12s;border-radius:0;-webkit-appearance:none;
+}
+.furl:focus{border-color:var(--black)}
+.media-toggle{
+  background:none;border:none;cursor:pointer;font-size:.6rem;
+  color:var(--gray-400);font-weight:700;letter-spacing:1.2px;
+  text-transform:uppercase;padding:0;margin-top:4px;
+  display:flex;align-items:center;gap:4px;transition:color .12s;
+}
+.media-toggle:hover{color:var(--black)}
+.media-body{margin-top:7px}
+.thumb{width:100%;max-height:7em;object-fit:cover;display:block;border:1px solid var(--gray-200);margin-top:5px}
+
+/* ── RIGHT PANEL ── */
+.r-section{padding:12px 14px;border-bottom:1px solid var(--gray-100)}
+.r-label{font-size:.52rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--gray-400);font-weight:700;margin-bottom:10px}
+.stat-row{display:flex;gap:8px}
+.stat-box{flex:1;border:1px solid var(--gray-200);padding:7px 5px;text-align:center}
+.stat-num{font-size:1.5rem;font-weight:900;line-height:1}
+.stat-name{font-size:.52rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray-400);margin-top:2px}
+.q-item{margin-bottom:10px}
+.q-num{font-size:.52rem;letter-spacing:1.5px;font-weight:700;color:var(--gray-400);margin-bottom:3px}
+.q-label{display:flex;align-items:flex-start;gap:8px;cursor:pointer}
+.q-check{
+  width:15px;height:15px;border:2px solid var(--black);flex-shrink:0;margin-top:1px;
+  appearance:none;-webkit-appearance:none;cursor:pointer;position:relative;background:var(--white);
+}
+.q-check:checked{background:var(--green);border-color:var(--black)}
+.q-check:checked::after{content:'✓';position:absolute;font-size:.58rem;font-weight:900;color:var(--black);top:-1px;left:1px}
+.q-text{font-size:.75rem;line-height:1.45;color:var(--black)}
+.eval-bar{height:2px;background:var(--gray-100);margin-top:10px}
+.eval-fill{height:100%;background:var(--green);transition:width .3s ease}
+.eval-score{font-size:.58rem;color:var(--gray-400);margin-top:4px;letter-spacing:.5px}
+.pill-btn{
+  display:block;width:100%;padding:8px 14px;border-radius:999px;
+  font-family:var(--font);font-size:.78rem;font-weight:800;cursor:pointer;
+  border:2px solid var(--black);text-align:center;
+  transition:background .15s,color .15s,border-color .15s;letter-spacing:.3px;margin-bottom:6px;
+}
+.pill-black{background:var(--black);color:var(--white)}
+.pill-black:hover{background:var(--green);color:var(--black);border-color:var(--green)}
+.pill-outline{background:transparent;color:var(--black)}
+.pill-outline:hover{background:var(--black);color:var(--white)}
+.pill-ghost{background:transparent;color:var(--gray-400);border-color:var(--gray-200);font-weight:500}
+.pill-ghost:hover{background:var(--red);color:var(--white);border-color:var(--red)}
+.save-dot{
+  text-align:center;padding:8px 14px;font-size:.58rem;letter-spacing:1.5px;
+  color:var(--gray-400);margin-top:auto;border-top:1px solid var(--gray-100);
+}
+.save-dot.ok{color:var(--green)}
+
+/* ── PRINT MODAL ── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);
+  z-index:100;align-items:center;justify-content:center;padding:16px;
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--white);width:100%;max-width:680px;max-height:90vh;
+  overflow-y:auto;border:3px solid var(--black);
+}
+.modal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;border-bottom:2px solid var(--black);position:sticky;top:0;background:var(--white);z-index:1;
+}
+.modal-title{font-size:1rem;font-weight:900}
+.modal-close{background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--gray-400);padding:2px 6px}
+.modal-close:hover{color:var(--black)}
+.modal-body{padding:18px}
+.modal-hint{font-size:.72rem;color:var(--gray-400);margin-bottom:16px}
+.modal-btn-row{display:flex;gap:8px;margin-top:16px}
+
+/* print view cards */
+.print-card{
+  display:flex;align-items:stretch;margin-bottom:10px;
+  border:2px solid var(--black);border-radius:3px;overflow:hidden;
+}
+.print-card-stripe{width:6px;flex-shrink:0}
+.print-card-main{flex:1;padding:10px 12px}
+.print-card-header{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.print-card-pos{font-size:.58rem;font-weight:700;color:var(--gray-400)}
+.print-card-tag{
+  font-size:.6rem;font-weight:900;letter-spacing:.8px;text-transform:uppercase;
+  padding:1px 6px;border-radius:2px;color:var(--white);
+}
+.print-card-title{font-size:.85rem;font-weight:700;margin-bottom:3px}
+.print-card-content{font-size:.75rem;color:var(--gray-600);line-height:1.5}
+
+/* bar chart */
+.chart-wrap{margin:16px 0}
+.chart-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.chart-label{font-size:.68rem;font-weight:700;width:70px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chart-bar-track{flex:1;background:var(--gray-100);height:22px;position:relative;border-radius:2px;overflow:hidden}
+.chart-bar-fill{height:100%;display:flex;align-items:center;padding-left:6px;transition:width .4s ease}
+.chart-bar-text{font-size:.62rem;font-weight:700;color:var(--white)}
+.chart-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:.65rem}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ── MOBILE ── */
+@media(max-width:640px){
+  .lib{width:85vw!important;max-width:300px;position:fixed;left:-100vw;top:0;bottom:0;z-index:50;transition:left .25s ease;transform:none!important}
+  .lib.mobile-open{left:0!important}
+  .panel-right{width:85vw!important;max-width:300px;position:fixed;right:-100vw;top:0;bottom:0;z-index:50;transition:right .25s ease;transform:none!important;border-left:2px solid var(--black)}
+  .panel-right.mobile-open{right:0!important}
+  .lib.collapsed,.panel-right.collapsed{left:-100vw!important;right:-100vw!important;width:85vw!important;opacity:1}
+  .board-body{padding-bottom:80px}
+  .sidebar-toggle{display:none}
+  .mobile-bar{display:flex}
+  .board-header{flex-wrap:wrap;padding:8px 10px;gap:6px}
+  .board-h1{font-size:.95rem}
+  .fs-slider{width:60px}
+}
+@media(min-width:641px){
+  .mobile-bar{display:none!important}
+}
+.mobile-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--black);display:flex;z-index:40;
+  border-top:2px solid #333;
+}
+.mob-btn{
+  flex:1;padding:12px 4px;background:none;border:none;color:var(--white);
+  font-family:var(--font);font-size:.65rem;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+}
+.mob-btn:active{background:#1a1a1a}
+.mob-btn-icon{font-size:1.1rem;line-height:1}
+.mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:45}
+.mob-overlay.show{display:block}
+
+@media print{
+  .modal-overlay{display:block!important;position:static;background:none;padding:0}
+  .modal{border:none;max-height:none}
+  .modal-header .modal-close,.modal-header .modal-btn-row{display:none}
+  body>*:not(.modal-overlay){display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- LEFT TOGGLE WRAP -->
+<div id="leftToggleWrap">
+  <button class="sidebar-toggle" id="leftToggle" onclick="toggleLeft()" title="收合左側">‹</button>
+</div>
+
+<!-- LEFT SIDEBAR -->
+<aside class="lib" id="lib">
+  <div class="lib-header">
+    <div class="lib-eyebrow">Workshop Tool</div>
+    <div class="lib-title">卡片庫<br>Card Library</div>
+    <div class="lib-hint">↙ 點擊加入工作板</div>
+  </div>
+  <div class="lib-section">核心卡 · Core</div>
+  <button class="lib-btn" onclick="addCard('purpose')">
+    <span class="lib-btn-en">PURPOSE</span><span class="lib-btn-zh">目的卡</span>
+    <span class="lib-btn-desc">釘住北極星：要傳達什麼？</span>
+  </button>
+  <button class="lib-btn" onclick="addCard('story')">
+    <span class="lib-btn-en">STORY</span><span class="lib-btn-zh">故事卡</span>
+    <span class="lib-btn-desc">具體場景敘事、聖訓故事</span>
+  </button>
+  <button class="lib-btn" onclick="addCard('interactive')">
+    <span class="lib-btn-en">INTERACT</span><span class="lib-btn-zh">互動卡</span>
+    <span class="lib-btn-desc">提問、舉手、小組活動</span>
+  </button>
+  <button class="lib-btn" onclick="addCard('quote')">
+    <span class="lib-btn-en">QUOTE</span><span class="lib-btn-zh">金句卡</span>
+    <span class="lib-btn-desc">經典原文 ／ 聖訓 ／ 名言</span>
+  </button>
+  <button class="lib-btn" onclick="addCard('qa')">
+    <span class="lib-btn-en">Q &amp; A</span><span class="lib-btn-zh">自問自答卡</span>
+    <span class="lib-btn-desc">替聽眾問疑問再回答</span>
+  </button>
+  <div class="lib-divider"></div>
+  <div class="lib-section">進階卡 · Advanced</div>
+  <button class="lib-btn" onclick="addCard('video')">
+    <span class="lib-btn-en">VIDEO</span><span class="lib-btn-zh">影片卡</span>
+    <span class="lib-btn-desc">嵌入 YouTube 縮圖</span>
+  </button>
+  <button class="lib-btn" onclick="addCard('news')">
+    <span class="lib-btn-en">NEWS</span><span class="lib-btn-zh">時事卡</span>
+    <span class="lib-btn-desc">當下熱點連結講題</span>
+  </button>
+  <button class="lib-btn" onclick="addCard('psych')">
+    <span class="lib-btn-en">PSYCH</span><span class="lib-btn-zh">心理卡</span>
+    <span class="lib-btn-desc">學術理論框架</span>
+  </button>
+  <button class="lib-btn" onclick="addCard('free')">
+    <span class="lib-btn-en">FREE</span><span class="lib-btn-zh">自由卡</span>
+    <span class="lib-btn-desc">即興留白，任意發揮</span>
+  </button>
+  <button class="lib-btn" onclick="addCard('rhythm')">
+    <span class="lib-btn-en">RHYTHM</span><span class="lib-btn-zh">節奏卡</span>
+    <span class="lib-btn-desc">停頓 ／ 轉折 ／ 呼吸</span>
+  </button>
+</aside>
+
+<!-- WORKBOARD -->
+<main class="board">
+  <div class="board-header">
+    <div class="board-header-left">
+      <span class="board-h1">講題結構板</span>
+      <span class="board-count" id="boardCount">0 張卡</span>
+    </div>
+    <div class="fs-control">
+      <span class="fs-label">字型</span>
+      <input type="range" class="fs-slider" id="fsSlider" min="12" max="30" value="14" oninput="setFontSize(this.value)">
+      <span class="fs-val" id="fsVal">14</span>
+    </div>
+  </div>
+  <div class="board-body" id="boardBody">
+    <div class="empty" id="emptyState">
+      <div class="empty-arrow">←</div>
+      <p>點擊左側卡片開始</p>
+      <small>從目的卡出發，組出你的講題骨架</small>
+    </div>
+    <div id="cardList"></div>
+  </div>
+</main>
+
+<!-- RIGHT PANEL -->
+<aside class="panel-right" id="panelRight">
+  <div class="r-section">
+    <div class="r-label">結構概覽</div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-num" id="statTotal">0</div><div class="stat-name">總卡數</div></div>
+      <div class="stat-box"><div class="stat-num" id="statTypes">0</div><div class="stat-name">種類</div></div>
+    </div>
+  </div>
+  <div class="r-section">
+    <div class="r-label">自評三問</div>
+    <div class="q-item">
+      <div class="q-num">01</div>
+      <label class="q-label"><input type="checkbox" class="q-check" onchange="updateEval()">
+        <span class="q-text">目的卡的方向，從整組卡片看得出來嗎？</span></label>
+    </div>
+    <div class="q-item">
+      <div class="q-num">02</div>
+      <label class="q-label"><input type="checkbox" class="q-check" onchange="updateEval()">
+        <span class="q-text">節奏有起伏？還是平鋪直敘？</span></label>
+    </div>
+    <div class="q-item">
+      <div class="q-num">03</div>
+      <label class="q-label"><input type="checkbox" class="q-check" onchange="updateEval()">
+        <span class="q-text">聽眾為什麼要聽完？有沒有給他留下的理由？</span></label>
+    </div>
+    <div class="eval-bar"><div class="eval-fill" id="evalFill" style="width:0%"></div></div>
+    <div class="eval-score" id="evalScore">0 / 3 完成</div>
+  </div>
+  <div class="r-section">
+    <div class="r-label">輸出</div>
+    <button class="pill-btn pill-black" onclick="openPrint()">查看講題結構圖 ↗</button>
+    <button class="pill-btn pill-ghost" onclick="clearAll()">清空白板</button>
+  </div>
+  <div class="save-dot" id="saveDot">● 自動儲存</div>
+</aside>
+
+<!-- RIGHT TOGGLE WRAP -->
+<div id="rightToggleWrap">
+  <button class="sidebar-toggle right-toggle" id="rightToggle" onclick="toggleRight()" title="收合右側">›</button>
+</div>
+
+</div><!-- .app -->
+
+<!-- MOBILE BOTTOM BAR -->
+<div class="mob-overlay" id="mobOverlay" onclick="closeMobilePanel()"></div>
+<div class="mobile-bar">
+  <button class="mob-btn" onclick="openMobileLeft()">
+    <span class="mob-btn-icon">🃏</span><span>卡片庫</span>
+  </button>
+  <button class="mob-btn" onclick="openPrint()">
+    <span class="mob-btn-icon">📊</span><span>結構圖</span>
+  </button>
+  <button class="mob-btn" onclick="openMobileRight()">
+    <span class="mob-btn-icon">✅</span><span>自評</span>
+  </button>
+</div>
+
+<!-- PRINT MODAL -->
+<div class="modal-overlay" id="printModal" onclick="if(event.target===this)closePrint()">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">講題結構圖</span>
+      <button class="modal-close" onclick="closePrint()">✕</button>
+    </div>
+    <div class="modal-body" id="printBody"></div>
+  </div>
+</div>
+
+<script>
+const TYPES = {
+  purpose:    {zh:'目的卡',    en:'PURPOSE',  color:'#2D6BE4'},
+  story:      {zh:'故事卡',    en:'STORY',    color:'#FF6B35'},
+  interactive:{zh:'互動卡',    en:'INTERACT', color:'#9B5DE5'},
+  quote:      {zh:'金句卡',    en:'QUOTE',    color:'#00B89C'},
+  qa:         {zh:'自問自答卡',en:'Q&A',      color:'#F72585'},
+  video:      {zh:'影片卡',    en:'VIDEO',    color:'#E63946'},
+  news:       {zh:'時事卡',    en:'NEWS',     color:'#F4A261'},
+  psych:      {zh:'心理卡',    en:'PSYCH',    color:'#7B9E87'},
+  free:       {zh:'自由卡',    en:'FREE',     color:'#6D6875'},
+  rhythm:     {zh:'節奏卡',    en:'RHYTHM',   color:'#4CC9F0'},
+};
+const HINTS = {
+  purpose:    {t:'例：讓聽眾相信飲食與修身的關聯',    c:'目標聽眾是誰？他們帶走什麼？'},
+  story:      {t:'例：先知某次……場景描述',           c:'人物、場景、轉折、結果'},
+  interactive:{t:'例：請大家想一個感動的瞬間……',     c:'活動說明 / 預期回應'},
+  quote:      {t:'例：「食物就是藥物。」',             c:'出處 / 經文章節'},
+  qa:         {t:'例：你可能會想：那我做不到怎麼辦？', c:'回答……'},
+  video:      {t:'影片標題',                          c:'說明這段影片的作用'},
+  news:       {t:'時事標題',                          c:'如何連結講題核心？'},
+  psych:      {t:'理論名稱',                          c:'一句話說明理論如何支撐論點'},
+  free:       {t:'自由發揮',                          c:'想到什麼就寫什麼'},
+  rhythm:     {t:'例：沉默 5 秒',                     c:'在這裡做什麼？為什麼？'},
+};
+
+let cards=[], nextId=1, saveTimer=null;
+
+/* FONT SIZE */
+function setFontSize(v){
+  document.documentElement.style.setProperty('--fs', v+'px');
+  document.getElementById('fsVal').textContent = v;
+  localStorage.setItem('cb_fs', v);
+}
+
+/* SIDEBAR TOGGLES */
+let leftOpen=true, rightOpen=true;
+function toggleLeft(){
+  leftOpen=!leftOpen;
+  document.getElementById('lib').classList.toggle('collapsed',!leftOpen);
+  document.getElementById('leftToggle').textContent = leftOpen ? '‹' : '›';
+}
+function toggleRight(){
+  rightOpen=!rightOpen;
+  document.getElementById('panelRight').classList.toggle('collapsed',!rightOpen);
+  document.getElementById('rightToggle').textContent = rightOpen ? '›' : '‹';
+}
+
+/* MOBILE */
+function openMobileLeft(){
+  document.getElementById('lib').classList.add('mobile-open');
+  document.getElementById('mobOverlay').classList.add('show');
+}
+function openMobileRight(){
+  document.getElementById('panelRight').classList.add('mobile-open');
+  document.getElementById('mobOverlay').classList.add('show');
+}
+function closeMobilePanel(){
+  document.getElementById('lib').classList.remove('mobile-open');
+  document.getElementById('panelRight').classList.remove('mobile-open');
+  document.getElementById('mobOverlay').classList.remove('show');
+}
+
+/* PERSIST */
+function persist(){
+  clearTimeout(saveTimer);
+  setSave('saving');
+  saveTimer=setTimeout(()=>{
+    try{ localStorage.setItem('cb_v3',JSON.stringify({cards,nextId})); setSave('ok'); setTimeout(()=>setSave('idle'),2200); }
+    catch(e){ setSave('idle'); }
+  },420);
+}
+function setSave(s){
+  const el=document.getElementById('saveDot');
+  if(s==='saving'){el.textContent='● 儲存中…';el.className='save-dot';}
+  else if(s==='ok'){el.textContent='✓ 已儲存';el.className='save-dot ok';}
+  else{el.textContent='● 自動儲存';el.className='save-dot';}
+}
+function load(){
+  try{
+    const fs=localStorage.getItem('cb_fs');
+    if(fs){ document.getElementById('fsSlider').value=fs; setFontSize(fs); }
+    const raw=localStorage.getItem('cb_v3');
+    if(!raw) return;
+    const d=JSON.parse(raw);
+    cards=(d.cards||[]).map(c=>({...c,expanded:false,mediaOpen:false}));
+    nextId=d.nextId||(cards.length?Math.max(...cards.map(c=>c.id))+1:1);
+    render();
+  } catch(e){ console.warn('load failed',e); }
+}
+
+/* CARD OPS */
+function addCard(type){
+  cards.push({id:nextId++,type,title:'',content:'',imageUrl:'',videoUrl:'',expanded:true,mediaOpen:false});
+  render(); persist();
+  requestAnimationFrame(()=>{
+    const last=document.getElementById('cardList').lastElementChild;
+    last?.scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+}
+function removeCard(id,e){
+  e?.stopPropagation();
+  if(!confirm('刪除這張卡片？')) return;
+  const el=document.getElementById('c-'+id);
+  if(el){ el.classList.add('out'); setTimeout(()=>{ cards=cards.filter(c=>c.id!==id); render(); persist(); },190); }
+}
+function moveCard(id,dir,e){
+  e?.stopPropagation();
+  const i=cards.findIndex(c=>c.id===id);
+  if(i<0) return;
+  const j=i+dir;
+  if(j<0||j>=cards.length) return;
+  [cards[i],cards[j]]=[cards[j],cards[i]];
+  render(); persist();
+}
+function toggleCard(id){
+  const c=cards.find(c=>c.id===id);
+  if(!c) return;
+  c.expanded=!c.expanded;
+  const body=document.getElementById('cb-'+id);
+  const el=document.getElementById('c-'+id);
+  if(body) body.style.display=c.expanded?'block':'none';
+  if(el) el.classList.toggle('expanded',c.expanded);
+}
+function setField(id,key,val){
+  const c=cards.find(c=>c.id===id);
+  if(!c) return;
+  c[key]=val;
+  if(key==='videoUrl') refreshThumb(id,val,'vt-');
+  if(key==='imageUrl') refreshThumb(id,val,'it-');
+  /* update preview title in bar */
+  if(key==='title'){
+    const el=document.getElementById('tp-'+id);
+    if(el) el.textContent=val||'';
+  }
+  persist();
+}
+function toggleMedia(id,e){
+  e?.stopPropagation();
+  const c=cards.find(c=>c.id===id);
+  if(!c) return;
+  c.mediaOpen=!c.mediaOpen;
+  const body=document.getElementById('mb-'+id);
+  const btn=document.getElementById('mt-'+id);
+  if(body) body.style.display=c.mediaOpen?'block':'none';
+  if(btn) btn.textContent=c.mediaOpen?'▲ 收起媒體':'▼ 新增圖片／影片';
+}
+
+/* MEDIA */
+function ytId(url){
+  if(!url) return null;
+  for(const re of [/[?&]v=([^&#]+)/,/youtu\.be\/([^?&#]+)/,/embed\/([^?&#]+)/]){
+    const m=url.match(re); if(m) return m[1];
+  }
+  return null;
+}
+function refreshThumb(id,url,prefix){
+  const el=document.getElementById(prefix+id);
+  if(!el) return;
+  if(prefix==='vt-'){
+    const vid=ytId(url);
+    el.src=vid?`https://img.youtube.com/vi/${vid}/mqdefault.jpg`:'';
+    el.style.display=vid?'block':'none';
+  } else {
+    el.src=url||''; el.style.display=url?'block':'none';
+    el.onerror=()=>{el.style.display='none';};
+  }
+}
+
+/* RENDER */
+function render(){
+  const list=document.getElementById('cardList');
+  const empty=document.getElementById('emptyState');
+  const n=cards.length;
+  document.getElementById('boardCount').textContent=n+' 張卡';
+  document.getElementById('statTotal').textContent=n;
+  document.getElementById('statTypes').textContent=new Set(cards.map(c=>c.type)).size;
+  empty.style.display=n?'none':'flex';
+  list.innerHTML=cards.map((c,i)=>cardHTML(c,i)).join('');
+  cards.forEach(c=>{
+    const body=document.getElementById('cb-'+c.id);
+    if(body) body.style.display=c.expanded?'block':'none';
+    const el=document.getElementById('c-'+c.id);
+    if(el) el.classList.toggle('expanded',c.expanded);
+    const mbody=document.getElementById('mb-'+c.id);
+    if(mbody) mbody.style.display=c.mediaOpen?'block':'none';
+    const mBtn=document.getElementById('mt-'+c.id);
+    if(mBtn) mBtn.textContent=c.mediaOpen?'▲ 收起媒體':'▼ 新增圖片／影片';
+    refreshThumb(c.id,c.videoUrl,'vt-');
+    refreshThumb(c.id,c.imageUrl,'it-');
+  });
+}
+
+function cardHTML(c,i){
+  const t=TYPES[c.type]||{zh:c.type,en:c.type.toUpperCase(),color:'#000'};
+  const h=HINTS[c.type]||{t:'標題',c:'內文'};
+  const first=i===0, last=i===cards.length-1;
+  return `<div class="work-card" id="c-${c.id}" style="--card-color:${t.color}">
+  <div class="card-bar" onclick="toggleCard(${c.id})">
+    <div class="card-bar-left">
+      <span class="card-pos">${String(i+1).padStart(2,'0')}</span>
+      <span class="card-tag" style="background:${t.color}">${h_(t.zh)}<span class="card-tag-en">${h_(t.en)}</span></span>
+      <span class="card-title-preview" id="tp-${c.id}">${h_(c.title)}</span>
+    </div>
+    <div class="card-ctrls">
+      <button class="ctrl" onclick="moveCard(${c.id},-1,event)" ${first?'disabled':''} title="上移">↑</button>
+      <button class="ctrl" onclick="moveCard(${c.id},1,event)" ${last?'disabled':''} title="下移">↓</button>
+      <button class="ctrl del" onclick="removeCard(${c.id},event)" title="刪除">✕</button>
+      <span class="card-expand-icon">▾</span>
+    </div>
+  </div>
+  <div class="card-body" id="cb-${c.id}" style="display:none">
+    <div class="field">
+      <div class="field-lbl">標題 Title</div>
+      <input type="text" class="finput" id="fi-t-${c.id}" value="${h_(c.title)}" placeholder="${h_(h.t)}"
+        oninput="setField(${c.id},'title',this.value)">
+    </div>
+    <div class="field">
+      <div class="field-lbl">內文 Content</div>
+      <textarea class="ftextarea" id="fi-c-${c.id}" placeholder="${h_(h.c)}"
+        oninput="setField(${c.id},'content',this.value)">${h_(c.content)}</textarea>
+    </div>
+    <div>
+      <button class="media-toggle" id="mt-${c.id}" onclick="toggleMedia(${c.id},event)">▼ 新增圖片／影片</button>
+      <div class="media-body" id="mb-${c.id}" style="display:none">
+        <div class="field">
+          <div class="field-lbl">圖片 URL</div>
+          <input type="url" class="furl" id="fi-iu-${c.id}" value="${h_(c.imageUrl)}" placeholder="https://..."
+            oninput="setField(${c.id},'imageUrl',this.value)">
+          <img class="thumb" id="it-${c.id}" src="" style="display:none" alt="">
+        </div>
+        <div class="field">
+          <div class="field-lbl">YouTube URL</div>
+          <input type="url" class="furl" id="fi-vu-${c.id}" value="${h_(c.videoUrl)}" placeholder="https://youtube.com/..."
+            oninput="setField(${c.id},'videoUrl',this.value)">
+          <img class="thumb" id="vt-${c.id}" src="" style="display:none" alt="">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>`;
+}
+
+function h_(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* EVAL */
+function updateEval(){
+  const checks=[...document.querySelectorAll('.q-check')];
+  const done=checks.filter(c=>c.checked).length;
+  document.getElementById('evalFill').style.width=(done/3*100)+'%';
+  document.getElementById('evalScore').textContent=done+' / 3 完成';
+}
+
+/* PRINT MODAL */
+function openPrint(){
+  closeMobilePanel();
+  const body=document.getElementById('printBody');
+  if(!cards.length){ body.innerHTML='<p style="color:#aaa;font-size:.8rem">尚未加入任何卡片。</p>'; document.getElementById('printModal').classList.add('open'); return; }
+
+  /* count per type */
+  const counts={};
+  cards.forEach(c=>{ counts[c.type]=(counts[c.type]||0)+1; });
+  const maxCount=Math.max(...Object.values(counts));
+
+  /* bar chart */
+  const chartRows=Object.entries(counts).map(([type,count])=>{
+    const t=TYPES[type]||{zh:type,color:'#888'};
+    const pct=Math.round(count/maxCount*100);
+    return `<div class="chart-row">
+      <div class="chart-label">${h_(t.zh)}</div>
+      <div class="chart-bar-track">
+        <div class="chart-bar-fill" style="width:${pct}%;background:${t.color}">
+          <span class="chart-bar-text">${count}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  /* legend */
+  const legend=Object.keys(counts).map(type=>{
+    const t=TYPES[type]||{zh:type,color:'#888'};
+    return `<div class="legend-item"><div class="legend-dot" style="background:${t.color}"></div>${h_(t.zh)}</div>`;
+  }).join('');
+
+  /* card sequence */
+  const cardList=cards.map((c,i)=>{
+    const t=TYPES[c.type]||{zh:c.type,en:c.type,color:'#888'};
+    return `<div class="print-card">
+      <div class="print-card-stripe" style="background:${t.color}"></div>
+      <div class="print-card-main">
+        <div class="print-card-header">
+          <span class="print-card-pos">${String(i+1).padStart(2,'0')}</span>
+          <span class="print-card-tag" style="background:${t.color}">${h_(t.zh)}</span>
+        </div>
+        ${c.title?`<div class="print-card-title">${h_(c.title)}</div>`:''}
+        ${c.content?`<div class="print-card-content">${h_(c.content).replace(/\n/g,'<br>')}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  body.innerHTML=`
+    <p class="modal-hint">共 ${cards.length} 張卡 · ${new Set(cards.map(c=>c.type)).size} 種類型 — 可截圖或列印</p>
+    <div class="chart-wrap">${chartRows}</div>
+    <div class="chart-legend">${legend}</div>
+    <hr style="border:none;border-top:2px solid #000;margin:16px 0">
+    <div style="font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:12px">卡片序列 Card Sequence</div>
+    ${cardList}
+    <div class="modal-btn-row">
+      <button class="pill-btn pill-black" style="flex:1" onclick="window.print()">列印 / 存 PDF</button>
+      <button class="pill-btn pill-outline" style="flex:1" onclick="closePrint()">關閉</button>
+    </div>`;
+
+  document.getElementById('printModal').classList.add('open');
+}
+function closePrint(){
+  document.getElementById('printModal').classList.remove('open');
+}
+
+/* CLEAR */
+function clearAll(){
+  if(!confirm('確定清空所有卡片？此動作無法復原。')) return;
+  cards=[]; nextId=1; render(); persist();
+}
+
+/* INIT */
+load();
+</script>
+</body>
+</html>
