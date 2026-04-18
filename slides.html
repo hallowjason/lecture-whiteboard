@@ -275,12 +275,16 @@ body { font-family: var(--font); }
 }
 
 /* =============================================
-   SLIDE 4 — CARD OVERVIEW
+   SLIDE 4 — CARD OVERVIEW + MINI WHITEBOARD
    ============================================= */
 #s4 {
   padding: var(--pad);
+  padding-top: clamp(1.2rem, 3vh, 2.5rem);
   padding-bottom: calc(var(--pad) + 2.5rem);
-  justify-content: center;
+  justify-content: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.8rem, 1.8vh, 1.4rem);
 }
 
 #s4 .overview-title {
@@ -288,15 +292,70 @@ body { font-family: var(--font); }
   font-weight: 900;
   line-height: 1.1;
   letter-spacing: -0.02em;
-  margin-bottom: clamp(1.2rem, 2.5vh, 2.2rem);
+  margin: 0;
+  flex-shrink: 0;
 }
 
-#s4 .two-col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(1.2rem, 3vw, 3rem);
+#s4 .wb {
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.16);
+  background:
+    radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px) 0 0 / 28px 28px,
+    #0a0a0a;
+  flex: 1;
+  min-height: 0;
   width: 100%;
-  max-width: 900px;
+  overflow: hidden;
+}
+#s4 .wb-head {
+  position: absolute;
+  top: 10px; left: 12px;
+  display: flex; align-items: center; gap: 0.55em;
+  font-size: var(--t-label); font-weight: 900;
+  letter-spacing: 0.13em; text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  z-index: 5; pointer-events: none;
+}
+#s4 .wb-head .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; display: inline-block; }
+#s4 .wb-hint {
+  position: absolute; bottom: 10px; left: 12px;
+  font-size: var(--t-small); color: rgba(255,255,255,0.3);
+  letter-spacing: 0.08em; z-index: 5; pointer-events: none;
+}
+#s4 .wb-reset {
+  position: absolute; top: 8px; right: 10px;
+  background: transparent; color: rgba(255,255,255,0.4);
+  border: 1px solid rgba(255,255,255,0.2);
+  font-family: var(--font); font-size: var(--t-small);
+  font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 0.3em 0.7em; cursor: pointer; z-index: 6;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+#s4 .wb-reset:hover { background: var(--green); color: #000; border-color: var(--green); }
+
+.wb-card {
+  position: absolute;
+  min-width: 9.5em;
+  padding: 1em 1.3em 1.15em;
+  font-size: var(--t-h3); font-weight: 900;
+  letter-spacing: 0.04em; color: #fff;
+  background: var(--wc, #444);
+  cursor: grab; user-select: none;
+  box-shadow: 4px 6px 0 rgba(0,0,0,0.4);
+  touch-action: none; z-index: 1;
+  line-height: 1.2;
+  display: flex; flex-direction: column; gap: 0.15em;
+  border-radius: 3px;
+  transition: box-shadow 0.12s ease;
+}
+.wb-card .wc-en {
+  font-size: 0.5em; font-weight: 700; opacity: 0.85;
+  letter-spacing: 0.16em; text-transform: uppercase;
+}
+.wb-card.dragging {
+  cursor: grabbing;
+  box-shadow: 4px 6px 0 rgba(0,0,0,0.5);
+  z-index: 100; transition: none;
 }
 
 #s4 .col-head {
@@ -339,7 +398,38 @@ body { font-family: var(--font); }
   padding-top: clamp(1.2rem, 3.5vh, 3rem);
   padding-bottom: calc(var(--pad) + 2.5rem);
   justify-content: flex-start;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.82fr);
+  column-gap: clamp(1.5rem, 3.5vw, 3.5rem);
+  align-items: start;
 }
+
+.demo-slide > .demo-lbl,
+.demo-slide > .demo-title,
+.demo-slide > .card-box,
+.demo-slide > .pill-row { grid-column: 1; }
+
+.demo-slide .img-slot {
+  grid-column: 2;
+  grid-row: 1 / span 6;
+  align-self: stretch;
+  position: relative;
+  min-height: clamp(16rem, 55vh, 32rem);
+  border: 1px dashed rgba(255,255,255,0.22);
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.018) 0 10px, transparent 10px 20px),
+    #0a0a0a;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.demo-slide .img-slot::before {
+  content: 'IMAGE · 預留圖片位置';
+  font-family: 'Menlo', 'Consolas', monospace;
+  font-size: var(--t-small); font-weight: 700;
+  letter-spacing: 0.18em; color: rgba(255,255,255,0.24);
+  text-transform: uppercase; pointer-events: none;
+}
+#s6 .img-slot { border-color: rgba(255,255,255,0.18); }
 
 .demo-lbl { margin-bottom: clamp(0.6rem, 1.4vh, 1.2rem); }
 
@@ -355,7 +445,7 @@ body { font-family: var(--font); }
 .card-box {
   border: 1px solid rgba(255,255,255,0.28);
   padding: clamp(0.9rem, 2vw, 1.6rem);
-  max-width: min(90%, 520px);
+  max-width: 100%;
   position: relative;
 }
 
@@ -433,6 +523,25 @@ body { font-family: var(--font); }
   gap: clamp(1.5rem, 3.5vw, 3.5rem);
   align-items: start;
   width: 100%;
+}
+
+#s8 .s8-col { display: flex; flex-direction: column; gap: clamp(0.8rem, 1.6vh, 1.3rem); }
+
+#s8 .img-slot-sm {
+  min-height: clamp(7rem, 18vh, 12rem);
+  border: 1px dashed rgba(255,255,255,0.22);
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.018) 0 10px, transparent 10px 20px),
+    #0a0a0a;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+#s8 .img-slot-sm::before {
+  content: 'IMAGE · 預留圖片位置';
+  font-family: 'Menlo', 'Consolas', monospace;
+  font-size: var(--t-small); font-weight: 700;
+  letter-spacing: 0.18em; color: rgba(255,255,255,0.24);
+  text-transform: uppercase;
 }
 
 #s8 .vline {
@@ -564,25 +673,35 @@ body { font-family: var(--font); }
 #s10 .mark.bad  { color: rgba(255,70,70,0.9); }
 #s10 .mark.good { color: var(--green); }
 
-#s10 .mini-cards { display: flex; flex-direction: column; gap: clamp(0.28rem, 0.5vh, 0.5rem); }
+#s10 .mini-cards { display: flex; flex-direction: column; gap: clamp(0.45rem, 0.9vh, 0.75rem); }
 
 #s10 .mc {
-  padding: 0.38em 0.75em;
-  font-size: var(--t-small);
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
+  padding: 0.7em 1em;
+  font-size: var(--t-h3);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
   border: 1px solid;
 }
-#s10 .mc.bad  { border-color: rgba(255,70,70,0.25); color: rgba(255,70,70,0.65); }
-#s10 .mc.good { border-color: rgba(198,255,0,0.28); color: rgba(198,255,0,0.75); }
+#s10 .mc.bad  { border-color: rgba(255,70,70,0.35); color: rgba(255,110,110,0.92); }
+#s10 .mc.good { border-color: rgba(198,255,0,0.4);  color: rgba(218,255,90,1); }
 
 #s10 .cmp-note {
-  margin-top: clamp(0.5rem, 1vh, 0.9rem);
-  font-size: var(--t-small);
-  color: rgba(255,255,255,0.3);
+  margin-top: clamp(0.9rem, 1.8vh, 1.4rem);
+  font-size: var(--t-body);
+  color: rgba(255,255,255,0.55);
   line-height: 1.55;
 }
+
+#s10 .cmp-head {
+  font-size: var(--t-h3);
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: none;
+  margin-bottom: clamp(0.7rem, 1.4vh, 1.1rem);
+  gap: 0.4em;
+}
+#s10 .cmp-head .mark { font-size: 1em; }
 
 /* =============================================
    SLIDES 11, 13 — PRACTICE ROUNDS (shared)
@@ -788,7 +907,7 @@ body { font-family: var(--font); }
 
     <span class="lbl" data-a="right" data-d="1">Card-Based Talk Prep</span>
 
-    <h1 class="cover-title" data-a data-d="2">講題不是想出來的，<br>是組出來的</h1>
+    <h1 class="cover-title" data-a data-d="2">講題不是想出來的，<br>是組出來的<br><br><br><span style="font-size:0.6em;opacity:0.85">飲食與修身養性</span></h1>
 
     <div class="cover-meta" data-a="in" data-d="4">
       講題碎片化卡片教學<br>
@@ -797,7 +916,7 @@ body { font-family: var(--font); }
 
     <div class="chrome">
       <div class="chrome-l">01 — CARD PREP</div>
-      <div class="chrome-r">01 / 14</div>
+      <div class="chrome-r">01 / 15</div>
     </div>
   </section>
 
@@ -813,7 +932,7 @@ body { font-family: var(--font); }
 
     <div class="chrome">
       <div class="chrome-l">02 — CARD PREP</div>
-      <div class="chrome-r">02 / 14</div>
+      <div class="chrome-r">02 / 15</div>
     </div>
   </section>
 
@@ -830,7 +949,7 @@ body { font-family: var(--font); }
 
     <div class="chrome">
       <div class="chrome-l">03 — CARD PREP</div>
-      <div class="chrome-r">03 / 14</div>
+      <div class="chrome-r">03 / 15</div>
     </div>
   </section>
 
@@ -840,32 +959,15 @@ body { font-family: var(--font); }
   <section class="slide" id="s4" aria-label="卡片體系總覽">
     <h2 class="overview-title" data-a data-d="1">10 張卡片<br>搞定一場講題</h2>
 
-    <div class="two-col">
-      <div data-a data-d="2">
-        <div class="col-head"><span class="lbl">核心 5 張</span></div>
-        <ul class="card-list core">
-          <li><span class="en">PURPOSE</span><span class="zh">目的卡</span></li>
-          <li><span class="en">STORY</span><span class="zh">故事卡</span></li>
-          <li><span class="en">INTERACT</span><span class="zh">互動卡</span></li>
-          <li><span class="en">QUOTE</span><span class="zh">金句卡</span></li>
-          <li><span class="en">Q&amp;A</span><span class="zh">自問自答卡</span></li>
-        </ul>
-      </div>
-      <div data-a data-d="3">
-        <div class="col-head"><span class="lbl-outline">進階 5 張</span></div>
-        <ul class="card-list adv">
-          <li><span class="en">VIDEO</span><span class="zh">影片卡</span></li>
-          <li><span class="en">NEWS</span><span class="zh">時事卡</span></li>
-          <li><span class="en">PSYCH</span><span class="zh">心理卡</span></li>
-          <li><span class="en">FREE</span><span class="zh">自由卡</span></li>
-          <li><span class="en">RHYTHM</span><span class="zh">節奏卡</span></li>
-        </ul>
-      </div>
+    <div class="wb" id="wb" data-a="in" data-d="2">
+      <div class="wb-head"><span class="dot"></span>試試看 · DRAG TO ARRANGE</div>
+      <button class="wb-reset" onclick="resetWb()">重設</button>
+      <div class="wb-hint">按住卡片拖曳 · 自由排列</div>
     </div>
 
     <div class="chrome">
       <div class="chrome-l">04 — CARD PREP</div>
-      <div class="chrome-r">04 / 14</div>
+      <div class="chrome-r">04 / 15</div>
     </div>
   </section>
 
@@ -880,17 +982,17 @@ body { font-family: var(--font); }
     <h2 class="demo-title" data-a data-d="2">傳達什麼？<br>聽眾帶走什麼？</h2>
 
     <div class="card-box" data-tag="PURPOSE" data-a data-d="3">
-      <div class="inner">
-        <strong>這場講題的核心訊息是什麼？</strong><br><br>
-        我希望聽眾離開後，記得一件事：<br>
-        「祈禱不是請求清單，是關係的維持。」<br>
-        <em>✓ 具體、可檢驗、一句話說得清楚</em>
+      <div class="inner" style="font-size: 24px">
+        <strong>這場講題的核心訊息是什麼？</strong><br>
+        我希望班員離開後，記得一件事：<br>
+        「結善緣，從日常的飲食開始」<br><br>
+        <em style="font-size: 16px">✓ 具體、可檢驗、一句話說得清楚</em>
       </div>
     </div>
 
     <div class="chrome">
       <div class="chrome-l">05 — CARD PREP</div>
-      <div class="chrome-r">05 / 14</div>
+      <div class="chrome-r">05 / 15</div>
     </div>
   </section>
 
@@ -905,17 +1007,54 @@ body { font-family: var(--font); }
     <h2 class="demo-title" data-a data-d="2">具體場景<br>有時間有地點</h2>
 
     <div class="card-box white" data-tag="STORY" data-a data-d="3">
-      <div class="inner">
-        那是 2018 年齋月第三週，<br>
-        我坐在麥地那清真寺的走廊上，<br>
-        周圍的人都在哭泣，而我…… 什麼也感覺不到。<br>
+      <div class="inner" style="font-size: 22px">
+        今年 1 月，我們前往尼泊爾，<br>
+        在一個奔波疲累只想找個地方修息的午後，<br>
+        我們遇到了一位咖啡廳老闆 Marco<br>
+        「你不吃蔥蒜洋蔥，那你生活飲食還有什麼意義？有什麼美好？」<br>
         <em>時間 ✓ &nbsp; 地點 ✓ &nbsp; 細節 ✓ &nbsp; 衝突 ✓</em>
       </div>
     </div>
 
+    <div class="img-slot" data-a="in" data-d="4" aria-hidden="true">
+      <video src="講題碎片化卡片教學/咖啡廳老闆.mp4" autoplay muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video>
+    </div>
+
     <div class="chrome">
       <div class="chrome-l">06 — CARD PREP</div>
-      <div class="chrome-r">06 / 14</div>
+      <div class="chrome-r">06 / 15</div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 6B  STORY CARD DEMO 2
+       ══════════════════════════════════════════ -->
+  <section class="slide demo-slide" id="s6b" aria-label="故事卡示範 2">
+    <div class="demo-lbl" data-a="right" data-d="1">
+      <span class="lbl">STORY 故事卡</span>
+    </div>
+
+    <h2 class="demo-title" data-a data-d="2">具體場景<br>有時間有地點</h2>
+
+    <div class="card-box white" data-tag="STORY" data-a data-d="3">
+      <div class="inner" style="font-size: 22px">
+        今年 4 月，我們前往泰國找房，<br>
+        那時正值中午，我們迷失方向、語言不通，<br>
+        以城市心臟地帶的百貨公司為據點，<br>
+        在 FB 社團從 50 間篩選出 22 間，<br>
+        決定先去吃飯，下午再想辦法，這時遇到了一位司機…<br>
+        <em>時間 ✓ &nbsp; 地點 ✓ &nbsp; 細節 ✓ &nbsp; 衝突 ✓</em>
+      </div>
+    </div>
+
+    <div class="img-slot" data-a="in" data-d="4" aria-hidden="true">
+      <img src="講題碎片化卡片教學/租房.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" alt="租房">
+    </div>
+
+    <div class="chrome">
+      <div class="chrome-l">07 — CARD PREP</div>
+      <div class="chrome-r">07 / 15</div>
     </div>
   </section>
 
@@ -927,27 +1066,29 @@ body { font-family: var(--font); }
       <span class="lbl">INTERACT 互動卡</span>
     </div>
 
-    <h2 class="demo-title" data-a data-d="2">給聽眾<br>一個動作</h2>
+    <h2 class="demo-title" data-a data-d="2">跟班員一起完成<br>這份講題</h2>
 
     <div class="pill-row" data-a data-d="3">
       <div class="pill green">提問</div>
       <div class="pill">舉手</div>
       <div class="pill">小組討論</div>
-      <div class="pill">配對分享</div>
+      <div class="pill">遊戲</div>
       <div class="pill">寫下來</div>
     </div>
 
     <div class="card-box" data-tag="INTERACT" data-a data-d="4">
-      <div class="inner">
-        「請問座位上有多少人，上個月有認真做過一次禱告？<br>
-        舉個手讓我看看。」<br>
+      <div class="inner" style="font-size: 18px">
+        1. 給每人一張卡片，上面印有一種飲食習慣（例如：全素、生酮、只吃洋芋片、斷食）。<br>
+        2. 參與者不看自己的卡片，貼在背後，讓其他人在房間裡走動。<br>
+        3. 大家看到別人的標籤後，不能說出內容，但要根據「對這種人的刻板印象」給予一個形容詞評價（例如：對吃素者說「你看起來很穩重」；對吃垃圾食物者說「你感覺很浮躁」）。<br>
+        4. 最後大家坐下來，根據別人對自己的評價，猜測背後的飲食標籤。<br>
         <em>讓沉默變成參與的入口</em>
       </div>
     </div>
 
     <div class="chrome">
-      <div class="chrome-l">07 — CARD PREP</div>
-      <div class="chrome-r">07 / 14</div>
+      <div class="chrome-l">08 — CARD PREP</div>
+      <div class="chrome-r">08 / 15</div>
     </div>
   </section>
 
@@ -956,32 +1097,30 @@ body { font-family: var(--font); }
        ══════════════════════════════════════════ -->
   <section class="slide" id="s8" aria-label="金句卡與自問自答卡">
     <div class="split">
-      <div data-a data-d="2">
+      <div class="s8-col" data-a data-d="2">
         <div class="split-lbl"><span class="lbl">QUOTE 金句卡</span></div>
         <h3 class="split-title">一句話的<br>力量</h3>
-        <p class="split-desc">從聖訓、古蘭經或名言中取一句話，<br>讓聽眾帶著它離開。</p>
-        <div class="split-eg">
-          「人的行為取決於他的意圖。」<br>
-          — 布哈里聖訓集
+        <p class="split-desc" style="font-size: 16px; color: rgb(128, 128, 128)">從聖訓、經典中找一句有連結的話，<br>讓聽眾帶著它離開。</p>
+        <div class="split-eg" style="font-size: 22px; color: rgb(255, 255, 255)">
+          食最基本就是為了養生，所以能吃得健康勝過吃得爽口，然而一定要美食珍饋嗎？（不一定）饥者甘食，渴者甘飲，而顏回一簞食、一瓢飲，他也樂在其中，所以凡事都繫之於心念，如果心情愉快即使粗食簡飯也吃得開心，如果無心就算是自己喜愛的食物也引不起自己的食欲
         </div>
       </div>
 
       <div class="vline" data-a="in" data-d="1"></div>
 
-      <div data-a data-d="3">
+      <div class="s8-col" data-a data-d="3">
         <div class="split-lbl"><span class="lbl">Q&amp;A 自問自答</span></div>
         <h3 class="split-title">替聽眾<br>問問題</h3>
-        <p class="split-desc">搶先提出聽眾心中的疑問，<br>再給出你的答案。</p>
-        <div class="split-eg">
-          「有人可能會想：齋戒這麼辛苦，真的有必要嗎？<br>
-          我的答案是……」
+        <p class="split-desc" style="font-size: 16px">搶先提出聽眾心中的疑問，<br>再給出你的答案。</p>
+        <div class="split-eg" style="font-size: 22px; color: rgb(255, 255, 255)">
+          吃素的人一定都脾氣很好嗎？
         </div>
       </div>
     </div>
 
     <div class="chrome">
-      <div class="chrome-l">08 — CARD PREP</div>
-      <div class="chrome-r">08 / 14</div>
+      <div class="chrome-l">09 — CARD PREP</div>
+      <div class="chrome-r">09 / 15</div>
     </div>
   </section>
 
@@ -993,35 +1132,35 @@ body { font-family: var(--font); }
 
     <div class="adv-grid">
       <div class="adv-card" data-a data-d="2">
-        <span class="ae">VIDEO</span>
-        <span class="az">影片卡</span>
-        <span class="ad">短影片作為素材，引發討論</span>
+        <span class="ae" style="font-size: 22px">VIDEO</span>
+        <span class="az" style="font-size: 30px">影片卡</span>
+        <span class="ad" style="font-size: 18px">短影片作為素材，引發討論</span>
       </div>
       <div class="adv-card" data-a data-d="3">
-        <span class="ae">NEWS</span>
-        <span class="az">時事卡</span>
-        <span class="ad">連結當下新聞或社會事件</span>
+        <span class="ae" style="font-size: 22px">NEWS</span>
+        <span class="az" style="font-size: 30px">時事卡</span>
+        <span class="ad" style="font-size: 18px">連結當下新聞或社會事件</span>
       </div>
       <div class="adv-card" data-a data-d="4">
-        <span class="ae">PSYCH</span>
-        <span class="az">心理卡</span>
-        <span class="ad">認知偏誤或心理學效應</span>
+        <span class="ae" style="font-size: 22px">PSYCH</span>
+        <span class="az" style="font-size: 30px">心理卡</span>
+        <span class="ad" style="font-size: 18px">認知偏誤或心理學效應</span>
       </div>
       <div class="adv-card" data-a data-d="5">
-        <span class="ae">FREE</span>
-        <span class="az">自由卡</span>
-        <span class="ad">任何不屬於其他類型的素材</span>
+        <span class="ae" style="font-size: 22px">FREE</span>
+        <span class="az" style="font-size: 30px">自由卡</span>
+        <span class="ad" style="font-size: 18px">任何不屬於其他類型的素材</span>
       </div>
       <div class="adv-card" data-a data-d="6">
-        <span class="ae">RHYTHM</span>
-        <span class="az">節奏卡</span>
-        <span class="ad">停頓、過渡、轉換節拍</span>
+        <span class="ae" style="font-size: 22px">RHYTHM</span>
+        <span class="az" style="font-size: 30px">節奏卡</span>
+        <span class="ad" style="font-size: 18px">停頓、過渡、轉換節拍</span>
       </div>
     </div>
 
     <div class="chrome">
-      <div class="chrome-l">09 — CARD PREP</div>
-      <div class="chrome-r">09 / 14</div>
+      <div class="chrome-l">10 — CARD PREP</div>
+      <div class="chrome-r">10 / 15</div>
     </div>
   </section>
 
@@ -1038,11 +1177,11 @@ body { font-family: var(--font); }
           <span style="color:rgba(255,70,70,0.7)">全是故事卡</span>
         </div>
         <div class="mini-cards">
-          <div class="mc bad">STORY — 童年記憶</div>
-          <div class="mc bad">STORY — 老師的故事</div>
-          <div class="mc bad">STORY — 朝聖經歷</div>
-          <div class="mc bad">STORY — 網路文章</div>
-          <div class="mc bad">STORY — 結尾故事</div>
+          <div class="mc bad">STORY — 開始吃素的原因</div>
+          <div class="mc bad">STORY — 吃素遇到了什麼困難</div>
+          <div class="mc bad">STORY — 如何解決了困難</div>
+          <div class="mc bad">STORY — 身邊出現了什麼貴人</div>
+          <div class="mc bad">STORY — 貴人分享吃素的故事</div>
         </div>
         <p class="cmp-note">無目的、無互動、無節奏<br>聽眾：「這跟我有什麼關係？」</p>
       </div>
@@ -1053,40 +1192,19 @@ body { font-family: var(--font); }
           <span style="color:rgba(198,255,0,0.8)">有起伏的組合</span>
         </div>
         <div class="mini-cards">
-          <div class="mc good">PURPOSE — 北極星</div>
-          <div class="mc good">STORY — 開場鉤子</div>
-          <div class="mc good">INTERACT — 提問</div>
-          <div class="mc good">QUOTE — 聖訓引用</div>
-          <div class="mc good">RHYTHM — 停頓收尾</div>
+          <div class="mc good">PURPOSE — 結善緣，從飲食開始</div>
+          <div class="mc good">STORY — 一場無蔥蒜的跨國友情</div>
+          <div class="mc good">INTERACT — 飲食的多種標籤</div>
+          <div class="mc good">QUOTE — 心情愉快就吃得開心</div>
+          <div class="mc good">QUESTION — 吃素的人脾氣都很好嗎</div>
         </div>
         <p class="cmp-note">有意圖、有節奏、有帶走感<br>聽眾：「我懂了，而且我想試試。」</p>
       </div>
     </div>
 
     <div class="chrome">
-      <div class="chrome-l">10 — CARD PREP</div>
-      <div class="chrome-r">10 / 14</div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════
-       SLIDE 11  PRACTICE ROUND 1
-       ══════════════════════════════════════════ -->
-  <section class="slide prac-slide" id="s11" aria-label="第一輪練習">
-    <div class="prac-bg" aria-hidden="true">01</div>
-
-    <p class="prac-tag" data-a="right" data-d="1">第一輪練習</p>
-    <h2 class="prac-title" data-a data-d="2">小組白板<br>組出講題</h2>
-    <p class="prac-desc" data-a data-d="3">
-      用白板選出 4–6 張卡片，<br>
-      組成一個 5 分鐘的講題架構。<br>
-      不用完美，先把骨架立起來。
-    </p>
-    <a href="whiteboard.html" class="prac-cta" data-a data-d="4">▶ 打開 whiteboard.html</a>
-
-    <div class="chrome">
       <div class="chrome-l">11 — CARD PREP</div>
-      <div class="chrome-r">11 / 14</div>
+      <div class="chrome-r">11 / 15</div>
     </div>
   </section>
 
@@ -1113,7 +1231,28 @@ body { font-family: var(--font); }
 
     <div class="chrome">
       <div class="chrome-l">12 — CARD PREP</div>
-      <div class="chrome-r">12 / 14</div>
+      <div class="chrome-r">12 / 15</div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 11  PRACTICE ROUND 1
+       ══════════════════════════════════════════ -->
+  <section class="slide prac-slide" id="s11" aria-label="第一輪練習">
+    <div class="prac-bg" aria-hidden="true">01</div>
+
+    <p class="prac-tag" data-a="right" data-d="1">第一輪練習</p>
+    <h2 class="prac-title" data-a data-d="2">小組白板<br>組出講題</h2>
+    <p class="prac-desc" data-a data-d="3">
+      用白板選出 4–6 張卡片，<br>
+      組成一個 5 分鐘的講題架構。<br>
+      不用完美，先把骨架立起來。
+    </p>
+    <a href="https://hallowjason.github.io/lecture-whiteboard/whiteboard.html" class="prac-cta" data-a data-d="4">▶ 打開卡片白板</a>
+
+    <div class="chrome">
+      <div class="chrome-l">13 — CARD PREP</div>
+      <div class="chrome-r">13 / 15</div>
     </div>
   </section>
 
@@ -1132,8 +1271,8 @@ body { font-family: var(--font); }
     </p>
 
     <div class="chrome">
-      <div class="chrome-l">13 — CARD PREP</div>
-      <div class="chrome-r">13 / 14</div>
+      <div class="chrome-l">14 — CARD PREP</div>
+      <div class="chrome-r">14 / 15</div>
     </div>
   </section>
 
@@ -1141,15 +1280,108 @@ body { font-family: var(--font); }
        SLIDE 14  CLOSING
        ══════════════════════════════════════════ -->
   <section class="slide" id="s14" aria-label="結尾">
-    <h2 class="close-title" data-a data-d="2">你的講題<br>從今天起<br>是組出來的</h2>
+    <h2 class="close-title" data-a data-d="2">你的講題—飲食與修身養性<br>從今天起<br>是組出來的</h2>
 
     <div class="close-bar" data-a="in" data-d="4">
-      <span class="cb-main">開始組你的第一場</span>
+      <span class="cb-main">開始組你的第一份講題</span>
       <span class="cb-sub">Card-Based Talk Prep</span>
     </div>
   </section>
 
 </div><!-- #deck -->
+
+<script>
+/* MINI WHITEBOARD (slide 4) */
+(function () {
+  const WB_CARDS = [
+    { en: 'PURPOSE',  zh: '目的卡',   color: '#2D6BE4' },
+    { en: 'STORY',    zh: '故事卡',   color: '#FF6B35' },
+    { en: 'INTERACT', zh: '互動卡',   color: '#9B5DE5' },
+    { en: 'QUOTE',    zh: '金句卡',   color: '#00B89C' },
+    { en: 'Q&A',      zh: '自問自答', color: '#F72585' },
+    { en: 'VIDEO',    zh: '影片卡',   color: '#E63946' },
+    { en: 'NEWS',     zh: '時事卡',   color: '#F4A261' },
+    { en: 'PSYCH',    zh: '心理卡',   color: '#7B9E87' },
+    { en: 'FREE',     zh: '自由卡',   color: '#6D6875' },
+    { en: 'RHYTHM',   zh: '節奏卡',   color: '#4CC9F0' },
+  ];
+  const wb = document.getElementById('wb');
+  if (!wb) return;
+  let userTouched = false;
+
+  function layoutPositions() {
+    const rect = wb.getBoundingClientRect();
+    const cardW = 200, cardH = 90, padX = 24, padY = 60, cols = 5;
+    const colGap = Math.max(16, rect.width - padX * 2 - cols * cardW) / Math.max(cols - 1, 1);
+    const rowGap = 14;
+    return WB_CARDS.map((c, i) => ({
+      x: padX + (i % cols) * (cardW + colGap),
+      y: padY + Math.floor(i / cols) * (cardH + rowGap),
+    }));
+  }
+  function build() {
+    wb.querySelectorAll('.wb-card').forEach(n => n.remove());
+    const positions = layoutPositions();
+    WB_CARDS.forEach((c, i) => {
+      const el = document.createElement('div');
+      el.className = 'wb-card';
+      el.style.setProperty('--wc', c.color);
+      el.style.left = positions[i].x + 'px';
+      el.style.top  = positions[i].y + 'px';
+      el.innerHTML = '<span class="wc-zh">' + c.zh + '</span><span class="wc-en">' + c.en + '</span>';
+      attachDrag(el);
+      wb.appendChild(el);
+    });
+    userTouched = false;
+  }
+  function attachDrag(el) {
+    let sx = 0, sy = 0, ox = 0, oy = 0, drag = false;
+    function down(e) {
+      e.preventDefault();
+      const p = 'touches' in e ? e.touches[0] : e;
+      sx = p.clientX; sy = p.clientY;
+      ox = parseFloat(el.style.left) || 0;
+      oy = parseFloat(el.style.top)  || 0;
+      drag = true; userTouched = true;
+      el.classList.add('dragging');
+      window.addEventListener('mousemove', move);
+      window.addEventListener('mouseup',   up);
+      window.addEventListener('touchmove', move, { passive: false });
+      window.addEventListener('touchend',  up);
+    }
+    function move(e) {
+      if (!drag) return;
+      e.preventDefault();
+      const p = 'touches' in e ? e.touches[0] : e;
+      const r = wb.getBoundingClientRect();
+      const cr = el.getBoundingClientRect();
+      let nx = ox + (p.clientX - sx);
+      let ny = oy + (p.clientY - sy);
+      nx = Math.max(0, Math.min(nx, r.width  - cr.width));
+      ny = Math.max(0, Math.min(ny, r.height - cr.height));
+      el.style.left = nx + 'px';
+      el.style.top  = ny + 'px';
+    }
+    function up() {
+      drag = false;
+      el.classList.remove('dragging');
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup',   up);
+      window.removeEventListener('touchmove', move);
+      window.removeEventListener('touchend',  up);
+    }
+    el.addEventListener('mousedown',  down);
+    el.addEventListener('touchstart', down, { passive: false });
+  }
+  window.resetWb = build;
+  requestAnimationFrame(() => requestAnimationFrame(build));
+  let rt;
+  window.addEventListener('resize', () => {
+    clearTimeout(rt);
+    rt = setTimeout(() => { if (!userTouched) build(); }, 180);
+  });
+})();
+</script>
 
 <script>
 /* =============================================
