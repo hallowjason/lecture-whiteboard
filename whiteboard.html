@@ -247,6 +247,39 @@ body{font-family:var(--font);background:var(--gray-100);color:var(--black);heigh
 }
 .save-dot.ok{color:var(--green)}
 
+/* ── TOPIC INPUT ── */
+.topic-wrap{margin-bottom:16px}
+.topic-input{
+  width:100%;border:none;border-bottom:2.5px solid var(--black);
+  padding:6px 2px;font-family:var(--font);font-size:1.05rem;font-weight:900;
+  color:var(--black);background:transparent;outline:none;letter-spacing:-.3px;
+}
+.topic-input::placeholder{color:var(--gray-200);font-weight:700}
+.topic-input:focus{border-bottom-color:var(--green)}
+
+/* ── LINE NOTICE ── */
+.line-notice{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);
+  z-index:300;align-items:flex-start;justify-content:center;
+  padding:20px 16px;overflow-y:auto;
+}
+.line-notice.open{display:flex}
+.line-box{background:var(--white);width:100%;max-width:400px;border:3px solid var(--black);margin-top:16px}
+.line-box-head{
+  background:var(--black);color:var(--white);
+  padding:12px 16px;display:flex;align-items:center;justify-content:space-between;
+}
+.line-box-head-title{font-size:.95rem;font-weight:900}
+.line-box-close{background:none;border:none;color:var(--white);font-size:1.1rem;cursor:pointer;padding:0 2px}
+.line-box-body{padding:16px}
+.line-section{margin-bottom:18px}
+.line-section-title{font-size:.6rem;letter-spacing:2px;text-transform:uppercase;font-weight:700;color:var(--gray-400);margin-bottom:8px}
+.line-step{font-size:.82rem;line-height:1.65;padding-left:1.2em;text-indent:-1.2em;margin-bottom:4px}
+.line-step strong{color:var(--black)}
+.line-divider{height:1px;background:var(--gray-100);margin:14px 0}
+.line-notice-btn{display:block;width:100%;padding:11px;background:var(--black);color:var(--white);border:none;font-family:var(--font);font-size:.85rem;font-weight:800;cursor:pointer;text-align:center;margin-top:4px}
+.line-notice-btn:hover{background:#333}
+
 /* ── PRINT MODAL ── */
 .modal-overlay{
   display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);
@@ -409,6 +442,9 @@ body{font-family:var(--font);background:var(--gray-100);color:var(--black);heigh
     </div>
   </div>
   <div class="board-body" id="boardBody">
+    <div class="topic-wrap">
+      <input type="text" class="topic-input" id="topicInput" placeholder="輸入講題主題名稱…" oninput="saveTopic(this.value)">
+    </div>
     <div class="empty" id="emptyState">
       <div class="empty-arrow">←</div>
       <p>點擊左側卡片開始</p>
@@ -474,6 +510,36 @@ body{font-family:var(--font);background:var(--gray-100);color:var(--black);heigh
   <button class="mob-btn" onclick="openMobileRight()">
     <span>自評</span>
   </button>
+</div>
+
+<!-- LINE NOTICE -->
+<div class="line-notice" id="lineNotice">
+  <div class="line-box">
+    <div class="line-box-head">
+      <span class="line-box-head-title">請用瀏覽器開啟，才能保留記憶</span>
+      <button class="line-box-close" onclick="closeLineNotice()">✕</button>
+    </div>
+    <div class="line-box-body">
+      <div class="line-section">
+        <div class="line-section-title">iOS（iPhone）— 用 Safari 開啟</div>
+        <div class="line-step">1. 點右下角 <strong>「⋯」</strong> 更多選項</div>
+        <div class="line-step">2. 選 <strong>「以預設瀏覽器開啟」</strong></div>
+      </div>
+      <div class="line-divider"></div>
+      <div class="line-section">
+        <div class="line-section-title">Android — 用 Chrome 開啟</div>
+        <div class="line-step">1. 點右上角 <strong>「⋯」</strong> 更多選項</div>
+        <div class="line-step">2. 選 <strong>「以其他瀏覽器開啟」</strong></div>
+      </div>
+      <div class="line-divider"></div>
+      <div class="line-section" style="margin-bottom:4px">
+        <div class="line-section-title">加入主畫面（建議）— 下次直接開啟不失憶</div>
+        <div class="line-step">iOS：Safari 下方 <strong>「分享」</strong> → <strong>「加入主畫面」</strong></div>
+        <div class="line-step">Android：Chrome 右上角 <strong>「⋮」</strong> → <strong>「加入主螢幕」</strong></div>
+      </div>
+      <button class="line-notice-btn" onclick="closeLineNotice()">我知道了，繼續使用</button>
+    </div>
+  </div>
 </div>
 
 <!-- PRINT MODAL -->
@@ -566,10 +632,15 @@ function setSave(s){
   else if(s==='ok'){el.textContent='✓ 已儲存';el.className='save-dot ok';}
   else{el.textContent='● 自動儲存';el.className='save-dot';}
 }
+/* TOPIC */
+function saveTopic(v){ localStorage.setItem('cb_topic',v); }
+
 function load(){
   try{
     const fs=localStorage.getItem('cb_fs');
     if(fs){ document.getElementById('fsSlider').value=fs; setFontSize(fs); }
+    const topic=localStorage.getItem('cb_topic');
+    if(topic){ document.getElementById('topicInput').value=topic; }
     const raw=localStorage.getItem('cb_v3');
     if(!raw) return;
     const d=JSON.parse(raw);
@@ -590,7 +661,7 @@ function addCard(type){
 }
 function removeCard(id,e){
   e?.stopPropagation();
-  if(!confirm('刪除這張卡片？')) return;
+  if(!confirm('卡片內容不保留，確定刪除？')) return;
   const el=document.getElementById('c-'+id);
   if(el){ el.classList.add('out'); setTimeout(()=>{ cards=cards.filter(c=>c.id!==id); render(); persist(); },190); }
 }
@@ -828,8 +899,10 @@ function openPrint(){
     </div>`;
   }).join('');
 
+  const topic=document.getElementById('topicInput').value.trim();
   body.innerHTML=`
     <div id="printContent">
+      ${topic?`<div style="font-size:1.1rem;font-weight:900;margin-bottom:10px;border-bottom:2px solid #000;padding-bottom:8px">${h_(topic)}</div>`:''}
       <p class="modal-hint">共 ${cards.length} 張卡 · ${new Set(cards.map(c=>c.type)).size} 種類型</p>
       <div class="chart-wrap">${chartRows}</div>
       <div class="chart-legend">${legend}</div>
@@ -868,8 +941,17 @@ function clearAll(){
   cards=[]; nextId=1; render(); persist();
 }
 
+/* LINE NOTICE */
+function closeLineNotice(){ document.getElementById('lineNotice').classList.remove('open'); }
+function checkLineAndShow(){
+  if(/Line\//i.test(navigator.userAgent)){
+    document.getElementById('lineNotice').classList.add('open');
+  }
+}
+
 /* INIT */
 load();
+checkLineAndShow();
 </script>
 </body>
 </html>
