@@ -184,10 +184,14 @@ body{font-family:var(--font);background:var(--gray-100);color:var(--black);heigh
 .ftextarea{
   width:100%;border:1px solid var(--gray-200);padding:6px 8px;
   font-family:var(--font);font-size:.8rem;color:var(--gray-800);
-  background:var(--white);outline:none;resize:vertical;min-height:4.5em;
+  background:var(--white);outline:none;resize:none;min-height:4.5em;
   line-height:1.55;transition:border-color .12s;border-radius:0;-webkit-appearance:none;
+  overflow:hidden;
 }
 .ftextarea:focus{border-color:var(--card-color,var(--black))}
+.work-card[draggable="true"]{cursor:grab}
+.work-card[draggable="true"]:active{cursor:grabbing}
+.work-card.drag-over{outline:2px solid var(--green);outline-offset:-2px;background:rgba(198,255,0,.04)}
 .furl{
   width:100%;border:1px solid var(--gray-200);padding:5px 8px;
   font-family:'Menlo','Consolas',monospace;font-size:.68rem;
@@ -445,7 +449,7 @@ body{font-family:var(--font);background:var(--gray-100);color:var(--black);heigh
   </div>
   <div class="r-section">
     <div class="r-label">輸出</div>
-    <button class="pill-btn pill-black" onclick="openPrint()">查看講題結構圖 ↗</button>
+    <button class="pill-btn pill-black" onclick="openPrint()">匯出圖片 ↗</button>
     <button class="pill-btn pill-ghost" onclick="clearAll()">清空白板</button>
   </div>
   <div class="save-dot" id="saveDot">● 自動儲存</div>
@@ -462,13 +466,13 @@ body{font-family:var(--font);background:var(--gray-100);color:var(--black);heigh
 <div class="mob-overlay" id="mobOverlay" onclick="closeMobilePanel()"></div>
 <div class="mobile-bar">
   <button class="mob-btn" onclick="openMobileLeft()">
-    <span class="mob-btn-icon">🃏</span><span>卡片庫</span>
+    <span>卡片庫</span>
   </button>
   <button class="mob-btn" onclick="openPrint()">
-    <span class="mob-btn-icon">📊</span><span>結構圖</span>
+    <span>匯出圖片</span>
   </button>
   <button class="mob-btn" onclick="openMobileRight()">
-    <span class="mob-btn-icon">✅</span><span>自評</span>
+    <span>自評</span>
   </button>
 </div>
 
@@ -476,13 +480,14 @@ body{font-family:var(--font);background:var(--gray-100);color:var(--black);heigh
 <div class="modal-overlay" id="printModal" onclick="if(event.target===this)closePrint()">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title">講題結構圖</span>
+      <span class="modal-title">匯出圖片</span>
       <button class="modal-close" onclick="closePrint()">✕</button>
     </div>
     <div class="modal-body" id="printBody"></div>
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const TYPES = {
   purpose:    {zh:'目的卡',    en:'PURPOSE',  color:'#2D6BE4'},
@@ -673,14 +678,17 @@ function render(){
     if(mBtn) mBtn.textContent=c.mediaOpen?'▲ 收起媒體':'▼ 新增圖片／影片';
     refreshThumb(c.id,c.videoUrl,'vt-');
     refreshThumb(c.id,c.imageUrl,'it-');
+    const ta=document.getElementById('fi-c-'+c.id);
+    if(ta) autoResize(ta);
   });
 }
 
 function cardHTML(c,i){
   const t=TYPES[c.type]||{zh:c.type,en:c.type.toUpperCase(),color:'#000'};
   const h=HINTS[c.type]||{t:'標題',c:'內文'};
-  const first=i===0, last=i===cards.length-1;
-  return `<div class="work-card" id="c-${c.id}" style="--card-color:${t.color}">
+  return `<div class="work-card" id="c-${c.id}" style="--card-color:${t.color}" draggable="true"
+    ondragstart="onDragStart(${c.id},event)" ondragover="onDragOver(${c.id},event)"
+    ondragleave="onDragLeave(${c.id},event)" ondrop="onDrop(${c.id},event)" ondragend="onDragEnd(event)">
   <div class="card-bar" onclick="toggleCard(${c.id})">
     <div class="card-bar-left">
       <span class="card-pos">${String(i+1).padStart(2,'0')}</span>
@@ -688,8 +696,6 @@ function cardHTML(c,i){
       <span class="card-title-preview" id="tp-${c.id}">${h_(c.title)}</span>
     </div>
     <div class="card-ctrls">
-      <button class="ctrl" onclick="moveCard(${c.id},-1,event)" ${first?'disabled':''} title="上移">↑</button>
-      <button class="ctrl" onclick="moveCard(${c.id},1,event)" ${last?'disabled':''} title="下移">↓</button>
       <button class="ctrl del" onclick="removeCard(${c.id},event)" title="刪除">✕</button>
       <span class="card-expand-icon">▾</span>
     </div>
@@ -703,7 +709,7 @@ function cardHTML(c,i){
     <div class="field">
       <div class="field-lbl">內文 Content</div>
       <textarea class="ftextarea" id="fi-c-${c.id}" placeholder="${h_(h.c)}"
-        oninput="setField(${c.id},'content',this.value)">${h_(c.content)}</textarea>
+        oninput="setField(${c.id},'content',this.value);autoResize(this)">${h_(c.content)}</textarea>
     </div>
     <div>
       <button class="media-toggle" id="mt-${c.id}" onclick="toggleMedia(${c.id},event)">▼ 新增圖片／影片</button>
@@ -727,6 +733,45 @@ function cardHTML(c,i){
 }
 
 function h_(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* AUTO RESIZE TEXTAREA */
+function autoResize(el){ el.style.height='auto'; el.style.height=el.scrollHeight+'px'; }
+
+/* DRAG AND DROP */
+let dragId=null;
+function onDragStart(id,e){
+  if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)){e.preventDefault();return;}
+  dragId=id;
+  e.dataTransfer.effectAllowed='move';
+  setTimeout(()=>{ const el=document.getElementById('c-'+id); if(el) el.style.opacity='.45'; },0);
+}
+function onDragOver(id,e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect='move';
+  document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+  if(dragId!==id){ const el=document.getElementById('c-'+id); el?.classList.add('drag-over'); }
+}
+function onDragLeave(id,e){
+  if(!e.currentTarget.contains(e.relatedTarget)){
+    document.getElementById('c-'+id)?.classList.remove('drag-over');
+  }
+}
+function onDrop(id,e){
+  e.preventDefault();
+  document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+  if(dragId===null||dragId===id){dragId=null;return;}
+  const from=cards.findIndex(c=>c.id===dragId);
+  const to=cards.findIndex(c=>c.id===id);
+  if(from<0||to<0){dragId=null;return;}
+  const [moved]=cards.splice(from,1);
+  cards.splice(to,0,moved);
+  dragId=null;
+  render(); persist();
+}
+function onDragEnd(e){
+  dragId=null;
+  document.querySelectorAll('.work-card').forEach(el=>{ el.style.opacity=''; el.classList.remove('drag-over'); });
+}
 
 /* EVAL */
 function updateEval(){
@@ -784,14 +829,16 @@ function openPrint(){
   }).join('');
 
   body.innerHTML=`
-    <p class="modal-hint">共 ${cards.length} 張卡 · ${new Set(cards.map(c=>c.type)).size} 種類型 — 可截圖或列印</p>
-    <div class="chart-wrap">${chartRows}</div>
-    <div class="chart-legend">${legend}</div>
-    <hr style="border:none;border-top:2px solid #000;margin:16px 0">
-    <div style="font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:12px">卡片序列 Card Sequence</div>
-    ${cardList}
+    <div id="printContent">
+      <p class="modal-hint">共 ${cards.length} 張卡 · ${new Set(cards.map(c=>c.type)).size} 種類型</p>
+      <div class="chart-wrap">${chartRows}</div>
+      <div class="chart-legend">${legend}</div>
+      <hr style="border:none;border-top:2px solid #000;margin:16px 0">
+      <div style="font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:12px">卡片序列 Card Sequence</div>
+      ${cardList}
+    </div>
     <div class="modal-btn-row">
-      <button class="pill-btn pill-black" style="flex:1" onclick="window.print()">列印 / 存 PDF</button>
+      <button class="pill-btn pill-black" style="flex:1" onclick="saveImage()">儲存圖片</button>
       <button class="pill-btn pill-outline" style="flex:1" onclick="closePrint()">關閉</button>
     </div>`;
 
@@ -799,6 +846,20 @@ function openPrint(){
 }
 function closePrint(){
   document.getElementById('printModal').classList.remove('open');
+}
+
+/* SAVE IMAGE */
+function saveImage(){
+  const target=document.getElementById('printContent');
+  if(!target) return;
+  html2canvas(target,{backgroundColor:'#ffffff',scale:2,useCORS:true,logging:false})
+    .then(canvas=>{
+      const a=document.createElement('a');
+      a.download='講題結構圖.png';
+      a.href=canvas.toDataURL('image/png');
+      a.click();
+    })
+    .catch(()=>alert('截圖失敗，請手動截圖。'));
 }
 
 /* CLEAR */
